@@ -25,7 +25,7 @@ def leggi_file(filename: str, contenuto: bytes) -> pd.DataFrame:
         df = pd.read_excel(io.BytesIO(contenuto), dtype=str)
     else:
         raise HTTPException(status_code=400, detail="Formato file non supportato. Usa .xlsx, .xls o .csv")
-    df.columns = df.columns.str.strip()
+    df.columns = df.columns.str.strip().str.lower()
     return df.fillna("")
 
 def parse_data(valore) -> date:

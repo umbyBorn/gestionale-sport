@@ -2,6 +2,9 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.routers import tesserati, gruppi, pagamenti, staff, presenze, assemblee
 from app.routers import auth
+from alembic.config import Config
+from alembic import command
+import os
 
 app = FastAPI(
     title="Gestionale Sportivo",
@@ -11,11 +14,16 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+@app.on_event("startup")
+def esegui_migrazioni():
+    alembic_cfg = Config("alembic.ini")
+    command.upgrade(alembic_cfg, "head")
 
 app.include_router(auth.router)
 app.include_router(tesserati.router)

@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.routers import tesserati, gruppi, pagamenti, staff, presenze, assemblee
-from app.routers import auth, calendario
+from app.routers import auth, calendario, importazione
 from alembic.config import Config
 from alembic import command
 import os

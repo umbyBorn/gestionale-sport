@@ -21,9 +21,29 @@ class Evento(Base):
     ora_fine = Column(Time, nullable=True)
     luogo = Column(String, nullable=True)
     note = Column(Text, nullable=True)
+    ricorrente_id = Column(Integer, ForeignKey("eventi_ricorrenti.id"), nullable=True)
 
     gruppo = relationship("Gruppo", back_populates="eventi")
     presenze = relationship("Presenza", back_populates="evento")
+    ricorrente = relationship("EventoRicorrente", back_populates="occorrenze")
+
+
+class EventoRicorrente(Base):
+    __tablename__ = "eventi_ricorrenti"
+
+    id = Column(Integer, primary_key=True, index=True)
+    gruppo_id = Column(Integer, ForeignKey("gruppi.id"), nullable=False)
+    tipo = Column(Enum(TipoEventoEnum), nullable=False, default=TipoEventoEnum.allenamento)
+    titolo = Column(String, nullable=False)
+    ora_inizio = Column(Time, nullable=True)
+    ora_fine = Column(Time, nullable=True)
+    luogo = Column(String, nullable=True)
+    giorni_settimana = Column(String, nullable=False)
+    data_inizio = Column(Date, nullable=False)
+    data_fine = Column(Date, nullable=False)
+    attivo = Column(Boolean, default=True)
+
+    occorrenze = relationship("Evento", back_populates="ricorrente")
 
 
 class Presenza(Base):

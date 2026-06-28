@@ -1,5 +1,5 @@
 from app.models.utenti import Utente, Tesserato, Gruppo, GruppoTesserato
 from app.models.contabilita import Tariffa, Pagamento, Ricevuta, MovimentoContabile
 from app.models.staff import Staff, StaffGruppo, Contratto, Compenso
-from app.models.presenze import Evento, Presenza
+from app.models.presenze import Evento, Presenza, EventoRicorrente
 from app.models.assemblee import Assemblea, PuntoOrdineGiorno, PartecipazioneAssemblea

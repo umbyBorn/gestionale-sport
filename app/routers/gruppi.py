@@ -1,0 +1,54 @@
+from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.orm import Session
+from app.database import SessionLocal
+from app.models.utenti import Gruppo
+from app.schemas.gruppi import GruppoCreate, GruppoRead
+from typing import List
+
+router = APIRouter(prefix="/gruppi", tags=["Gruppi"])
+
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
+@router.get("/", response_model=List[GruppoRead])
+def lista_gruppi(db: Session = Depends(get_db)):
+    return db.query(Gruppo).filter(Gruppo.attivo == True).all()
+
+@router.get("/{gruppo_id}", response_model=GruppoRead)
+def get_gruppo(gruppo_id: int, db: Session = Depends(get_db)):
+    gruppo = db.query(Gruppo).filter(Gruppo.id == gruppo_id).first()
+    if not gruppo:
+        raise HTTPException(status_code=404, detail="Gruppo non trovato")
+    return gruppo
+
+@router.post("/", response_model=GruppoRead)
+def crea_gruppo(gruppo: GruppoCreate, db: Session = Depends(get_db)):
+    db_gruppo = Gruppo(**gruppo.model_dump())
+    db.add(db_gruppo)
+    db.commit()
+    db.refresh(db_gruppo)
+    return db_gruppo
+
+@router.put("/{gruppo_id}", response_model=GruppoRead)
+def aggiorna_gruppo(gruppo_id: int, gruppo: GruppoCreate, db: Session = Depends(get_db)):
+    db_gruppo = db.query(Gruppo).filter(Gruppo.id == gruppo_id).first()
+    if not db_gruppo:
+        raise HTTPException(status_code=404, detail="Gruppo non trovato")
+    for key, value in gruppo.model_dump().items():
+        setattr(db_gruppo, key, value)
+    db.commit()
+    db.refresh(db_gruppo)
+    return db_gruppo
+
+@router.delete("/{gruppo_id}")
+def elimina_gruppo(gruppo_id: int, db: Session = Depends(get_db)):
+    db_gruppo = db.query(Gruppo).filter(Gruppo.id == gruppo_id).first()
+    if not db_gruppo:
+        raise HTTPException(status_code=404, detail="Gruppo non trovato")
+    db_gruppo.attivo = False
+    db.commit()
+    return {"messaggio": "Gruppo disattivato"}

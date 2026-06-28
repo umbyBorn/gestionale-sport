@@ -33,6 +33,8 @@ app.include_router(staff.router)
 app.include_router(presenze.router)
 app.include_router(assemblee.router)
 app.include_router(calendario.router)
+app.include_router(importazione.router)
+app.include_router(importazione.router)
 
 @app.get("/")
 def root():

@@ -20,7 +20,7 @@ def get_db():
 def leggi_file(filename: str, contenuto: bytes) -> pd.DataFrame:
     nome = filename.lower()
     if nome.endswith(".csv"):
-        df = pd.read_csv(io.BytesIO(contenuto), dtype=str, sep=None, engine='python')
+        df = pd.read_csv(io.BytesIO(contenuto), dtype=str, sep=';', encoding='utf-8-sig')
     elif nome.endswith(".xlsx") or nome.endswith(".xls"):
         df = pd.read_excel(io.BytesIO(contenuto), dtype=str)
     else:

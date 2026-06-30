@@ -66,3 +66,20 @@ def elimina_tesserato(tesserato_id: int, db: Session = Depends(get_db)):
     db_tesserato.attivo = False
     db.commit()
     return {"messaggio": "Tesserato disattivato"}
+from app.models.utenti import GruppoTesserato, Gruppo
+from datetime import date
+
+
+@router.get("/{tesserato_id}/gruppi")
+def gruppi_del_tesserato(tesserato_id: int, db: Session = Depends(get_db)):
+    righe = db.query(GruppoTesserato).filter(GruppoTesserato.tesserato_id == tesserato_id).all()
+    return [r.gruppo_id for r in righe]
+
+
+@router.put("/{tesserato_id}/gruppi")
+def aggiorna_gruppi_tesserato(tesserato_id: int, gruppi_id: list[int], db: Session = Depends(get_db)):
+    db.query(GruppoTesserato).filter(GruppoTesserato.tesserato_id == tesserato_id).delete()
+    for gid in gruppi_id:
+        db.add(GruppoTesserato(gruppo_id=gid, tesserato_id=tesserato_id, data_iscrizione=date.today()))
+    db.commit()
+    return {"ok": True, "gruppi_assegnati": gruppi_id}

@@ -3,3 +3,4 @@ from app.models.contabilita import Tariffa, Pagamento, Ricevuta, MovimentoContab
 from app.models.staff import Staff, StaffGruppo, Contratto, Compenso
 from app.models.presenze import Evento, Presenza, EventoRicorrente
 from app.models.assemblee import Assemblea, PuntoOrdineGiorno, PartecipazioneAssemblea
+from app.models.messaggi import Messaggio, MessaggioDestinatario

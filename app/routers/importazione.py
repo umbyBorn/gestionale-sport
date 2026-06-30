@@ -132,14 +132,15 @@ async def importa_tesserati(file: UploadFile = File(...), db: Session = Depends(
             gruppo_nome = col(row, "gruppo", "categoria")
             if gruppo_nome:
                 gruppo = db.query(Gruppo).filter(Gruppo.nome.ilike(gruppo_nome)).first()
-                if gruppo:
-                    db.add(GruppoTesserato(
-                        gruppo_id=gruppo.id,
-                        tesserato_id=tesserato.id,
-                        data_iscrizione=date.today()
-                    ))
-                else:
-                    errori.append(RigaErrore(riga=riga_num, errore=f"gruppo '{gruppo_nome}' non trovato, tesserato creato senza gruppo"))
+                if not gruppo:
+                    gruppo = Gruppo(nome=gruppo_nome, descrizione=gruppo_nome)
+                    db.add(gruppo)
+                    db.flush()
+                db.add(GruppoTesserato(
+                    gruppo_id=gruppo.id,
+                    tesserato_id=tesserato.id,
+                    data_iscrizione=date.today()
+                ))
 
             creati += 1
         except Exception as e:

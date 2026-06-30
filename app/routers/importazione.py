@@ -64,7 +64,10 @@ async def importa_tesserati(file: UploadFile = File(...), db: Session = Depends(
         try:
             cf = str(row.get("codice fiscale") or row.get("codice_fiscale", "")).strip().upper()
             if not cf:
-                raise ValueError("codice fiscale mancante")
+                # Genera un CF temporaneo univoco
+                import uuid
+                cf = f"TEMP_{uuid.uuid4().hex[:8].upper()}"
+                errori.append(RigaErrore(riga=riga_num, errore=f"codice fiscale mancante, assegnato CF temporaneo {cf} — da aggiornare manualmente"))
 
             if db.query(Tesserato).filter(Tesserato.codice_fiscale == cf).first():
                 saltati += 1

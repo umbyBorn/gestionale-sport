@@ -60,8 +60,8 @@ class TesseratoCreate(BaseModel):
     data_emissione_tessera: Optional[date] = None
     data_scadenza_tessera: Optional[date] = None
     matricola: Optional[str] = None
-    disabile: bool = False
-    straniero: bool = False
+    disabile: Optional[bool] = False
+    straniero: Optional[bool] = False
     titolo_studio: Optional[str] = None
     e_socio: bool = True
     genitore_id: Optional[int] = None

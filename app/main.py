@@ -4,7 +4,6 @@ from app.routers import tesserati, gruppi, pagamenti, staff, presenze, assemblee
 from app.routers import auth, calendario, importazione, messaggi
 from alembic.config import Config
 from alembic import command
-import os
 
 app = FastAPI(
     title="Gestionale Sportivo",
@@ -22,8 +21,12 @@ app.add_middleware(
 
 @app.on_event("startup")
 def esegui_migrazioni():
-    alembic_cfg = Config("alembic.ini")
-    command.upgrade(alembic_cfg, "head")
+    try:
+        alembic_cfg = Config("alembic.ini")
+        command.upgrade(alembic_cfg, "head")
+        print("Migrazioni completate con successo")
+    except Exception as e:
+        print(f"Avviso migrazioni: {e} — il server continua comunque")
 
 app.include_router(auth.router)
 app.include_router(tesserati.router)
@@ -33,7 +36,6 @@ app.include_router(staff.router)
 app.include_router(presenze.router)
 app.include_router(assemblee.router)
 app.include_router(calendario.router)
-app.include_router(importazione.router)
 app.include_router(importazione.router)
 app.include_router(messaggi.router)
 

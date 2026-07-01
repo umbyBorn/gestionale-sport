@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from datetime import date
 from app.database import SessionLocal
 from app.models.utenti import Tesserato
@@ -17,15 +17,15 @@ def get_db():
 
 @router.get("/tutti", response_model=List[TesseratoRead])
 def lista_tutti_tesserati(db: Session = Depends(get_db)):
-    return db.query(Tesserato).all()
+    return db.query(Tesserato).options(joinedload(Tesserato.genitore), joinedload(Tesserato.documenti)).all()
 
 @router.get("/", response_model=List[TesseratoRead])
 def lista_tesserati(db: Session = Depends(get_db)):
-    return db.query(Tesserato).filter(Tesserato.attivo == True).all()
+    return db.query(Tesserato).options(joinedload(Tesserato.genitore), joinedload(Tesserato.documenti)).filter(Tesserato.attivo == True).all()
 
 @router.get("/{tesserato_id}", response_model=TesseratoRead)
 def get_tesserato(tesserato_id: int, db: Session = Depends(get_db)):
-    tesserato = db.query(Tesserato).filter(Tesserato.id == tesserato_id).first()
+    tesserato = db.query(Tesserato).options(joinedload(Tesserato.genitore), joinedload(Tesserato.documenti)).filter(Tesserato.id == tesserato_id).first()
     if not tesserato:
         raise HTTPException(status_code=404, detail="Tesserato non trovato")
     return tesserato

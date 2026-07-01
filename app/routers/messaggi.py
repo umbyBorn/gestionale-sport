@@ -5,6 +5,7 @@ from app.models.utenti import Tesserato, GruppoTesserato, Gruppo
 from app.models.messaggi import Messaggio, MessaggioDestinatario
 from app.schemas.messaggi import MessaggioCreate, MessaggioRead
 import smtplib
+import threading
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 import os
@@ -86,26 +87,49 @@ def invia_messaggio(dati: MessaggioCreate, db: Session = Depends(get_db)):
 
     tesserati = db.query(Tesserato).filter(Tesserato.id.in_(id_destinatari)).all()
 
+    # Salva subito i destinatari senza aspettare le email
+    lista_email = []
     for t in tesserati:
-        email_ok = False
-        # Prima controlla email diretta del tesserato
         email_dest = t.email if t.email else None
-        # Se non c'è, usa email dell'account utente collegato
         if not email_dest and t.utente_id:
             from app.models.utenti import Utente
             utente = db.query(Utente).filter(Utente.id == t.utente_id).first()
             if utente and utente.email:
                 email_dest = utente.email
-        if email_dest:
-            email_ok = invia_email(email_dest, dati.intestazione, dati.corpo)
-
         db.add(MessaggioDestinatario(
             messaggio_id=messaggio.id,
             tesserato_id=t.id,
-            email_inviata=email_ok,
+            email_inviata=False,
         ))
+        if email_dest:
+            lista_email.append((t.id, email_dest))
 
     db.commit()
+
+    # Invia email in background senza bloccare la risposta
+    def invia_in_background(messaggio_id, emails, intestazione, corpo):
+        from app.database import SessionLocal as SL
+        bg_db = SL()
+        try:
+            for tesserato_id, email_dest in emails:
+                ok = invia_email(email_dest, intestazione, corpo)
+                if ok:
+                    dest = bg_db.query(MessaggioDestinatario).filter(
+                        MessaggioDestinatario.messaggio_id == messaggio_id,
+                        MessaggioDestinatario.tesserato_id == tesserato_id
+                    ).first()
+                    if dest:
+                        dest.email_inviata = True
+                        bg_db.commit()
+        finally:
+            bg_db.close()
+
+    thread = threading.Thread(
+        target=invia_in_background,
+        args=(messaggio.id, lista_email, dati.intestazione, dati.corpo),
+        daemon=True
+    )
+    thread.start()
     db.refresh(messaggio)
     num_dest = db.query(MessaggioDestinatario).filter(MessaggioDestinatario.messaggio_id == messaggio.id).count()
     num_email = db.query(MessaggioDestinatario).filter(

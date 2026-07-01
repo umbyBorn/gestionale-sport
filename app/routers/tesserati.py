@@ -174,7 +174,9 @@ async def carica_documento(
         contenuto,
         folder=f"gestionale/tesserati/{tesserato_id}/documenti",
         resource_type="auto",
-        public_id=file.filename
+        public_id=file.filename,
+        access_mode="public",
+        type="upload"
     )
     from datetime import datetime
     data_scad_parsed = None
@@ -221,6 +223,8 @@ async def carica_foto(
         resource_type="image",
         public_id="foto",
         overwrite=True,
+        access_mode="public",
+        type="upload",
         transformation=[{"width": 400, "height": 400, "crop": "fill", "gravity": "face"}]
     )
     tesserato.foto_url = risultato["secure_url"]

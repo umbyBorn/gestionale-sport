@@ -8,6 +8,12 @@ from typing import List, Optional
 
 router = APIRouter(prefix="/tesserati", tags=["Tesserati"])
 
+def con_gruppi_nomi(tesserato, db):
+    tesserato.gruppi_nomi = [gt.gruppo.nome for gt in db.query(GruppoTesserato).filter(
+        GruppoTesserato.tesserato_id == tesserato.id
+    ).all() if gt.gruppo]
+    return tesserato
+
 def get_db():
     db = SessionLocal()
     try:
@@ -36,7 +42,7 @@ def get_tesserato(tesserato_id: int, db: Session = Depends(get_db)):
     tesserato = db.query(Tesserato).options(joinedload(Tesserato.genitore), joinedload(Tesserato.documenti)).filter(Tesserato.id == tesserato_id).first()
     if not tesserato:
         raise HTTPException(status_code=404, detail="Tesserato non trovato")
-    return tesserato
+    return con_gruppi_nomi(tesserato, db)
 
 @router.post("/", response_model=TesseratoRead)
 def crea_tesserato(tesserato: TesseratoCreate, db: Session = Depends(get_db)):
@@ -44,7 +50,7 @@ def crea_tesserato(tesserato: TesseratoCreate, db: Session = Depends(get_db)):
     db.add(db_tesserato)
     db.commit()
     db.refresh(db_tesserato)
-    return db_tesserato
+    return con_gruppi_nomi(db_tesserato, db)
 
 @router.put("/{tesserato_id}", response_model=TesseratoRead)
 def aggiorna_tesserato(tesserato_id: int, tesserato: TesseratoCreate, db: Session = Depends(get_db)):
@@ -55,7 +61,7 @@ def aggiorna_tesserato(tesserato_id: int, tesserato: TesseratoCreate, db: Sessio
         setattr(db_tesserato, key, value)
     db.commit()
     db.refresh(db_tesserato)
-    return db_tesserato
+    return con_gruppi_nomi(db_tesserato, db)
 
 @router.put("/{tesserato_id}/riattiva", response_model=TesseratoRead)
 def riattiva_tesserato(tesserato_id: int, db: Session = Depends(get_db)):

@@ -88,11 +88,16 @@ def invia_messaggio(dati: MessaggioCreate, db: Session = Depends(get_db)):
 
     for t in tesserati:
         email_ok = False
-        if t.utente_id:
+        # Prima controlla email diretta del tesserato
+        email_dest = t.email if t.email else None
+        # Se non c'è, usa email dell'account utente collegato
+        if not email_dest and t.utente_id:
             from app.models.utenti import Utente
             utente = db.query(Utente).filter(Utente.id == t.utente_id).first()
             if utente and utente.email:
-                email_ok = invia_email(utente.email, dati.intestazione, dati.corpo)
+                email_dest = utente.email
+        if email_dest:
+            email_ok = invia_email(email_dest, dati.intestazione, dati.corpo)
 
         db.add(MessaggioDestinatario(
             messaggio_id=messaggio.id,

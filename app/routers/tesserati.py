@@ -170,13 +170,18 @@ async def carica_documento(
     db: Session = Depends(get_db)
 ):
     contenuto = await file.read()
+    import os as _os
+    nome_file_pulito = _os.path.splitext(file.filename)[0].replace(' ', '_')
     risultato = cloudinary.uploader.upload(
         contenuto,
         folder=f"gestionale/tesserati/{tesserato_id}/documenti",
-        resource_type="auto",
-        public_id=file.filename,
-        access_mode="public",
-        type="upload"
+        resource_type="raw",
+        public_id=nome_file_pulito,
+        use_filename=True,
+        unique_filename=True,
+        overwrite=False,
+        type="upload",
+        access_mode="public"
     )
     from datetime import datetime
     data_scad_parsed = None

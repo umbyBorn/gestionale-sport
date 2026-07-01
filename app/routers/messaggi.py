@@ -36,12 +36,16 @@ def invia_email(destinatario: str, intestazione: str, corpo: str):
     msg.attach(MIMEText(corpo, "plain"))
 
     try:
-        with smtplib.SMTP(host, porta) as server:
+        with smtplib.SMTP(host, porta, timeout=10) as server:
+            server.ehlo()
             server.starttls()
+            server.ehlo()
             server.login(utente, password)
             server.sendmail(mittente, destinatario, msg.as_string())
+        print(f"Email inviata a {destinatario}")
         return True
-    except Exception:
+    except Exception as e:
+        print(f"Errore invio email a {destinatario}: {e}")
         return False
 
 

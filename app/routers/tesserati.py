@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Form
 from sqlalchemy.orm import Session, joinedload
 from datetime import date
 from app.database import SessionLocal
@@ -137,9 +137,9 @@ def lista_documenti(tesserato_id: int, db: Session = Depends(get_db)):
 @router.post("/{tesserato_id}/documenti")
 async def carica_documento(
     tesserato_id: int,
-    tipo: str,
-    data_scadenza: Optional[date] = None,
-    note: Optional[str] = None,
+    tipo: str = Form(...),
+    data_scadenza: Optional[str] = Form(None),
+    note: Optional[str] = Form(None),
     file: UploadFile = File(...),
     db: Session = Depends(get_db)
 ):
@@ -150,12 +150,19 @@ async def carica_documento(
         resource_type="auto",
         public_id=file.filename
     )
+    from datetime import datetime
+    data_scad_parsed = None
+    if data_scadenza:
+        try:
+            data_scad_parsed = datetime.strptime(data_scadenza, "%Y-%m-%d").date()
+        except ValueError:
+            pass
     doc = Documento(
         tesserato_id=tesserato_id,
         tipo=tipo,
         nome_file=file.filename,
         url=risultato["secure_url"],
-        data_scadenza=data_scadenza,
+        data_scadenza=data_scad_parsed,
         note=note
     )
     db.add(doc)

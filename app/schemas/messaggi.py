@@ -13,9 +13,9 @@ class MessaggioCreate(BaseModel):
 
 class DestinatarioRead(BaseModel):
     tesserato_id: int
-    nome: str
-    cognome: str
     email_inviata: bool
+    nome: Optional[str] = None
+    cognome: Optional[str] = None
 
     class Config:
         from_attributes = True
@@ -26,7 +26,8 @@ class MessaggioRead(BaseModel):
     intestazione: str
     corpo: str
     data_invio: datetime
-    destinatari: List[DestinatarioRead] = []
+    num_destinatari: Optional[int] = 0
+    num_email_inviate: Optional[int] = 0
 
     class Config:
         from_attributes = True

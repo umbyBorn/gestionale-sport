@@ -75,6 +75,18 @@ def elimina_tesserato(tesserato_id: int, db: Session = Depends(get_db)):
     db_tesserato.attivo = False
     db.commit()
     return {"messaggio": "Tesserato disattivato"}
+
+@router.delete("/{tesserato_id}/definitivo")
+def elimina_tesserato_definitivo(tesserato_id: int, db: Session = Depends(get_db)):
+    db_tesserato = db.query(Tesserato).filter(Tesserato.id == tesserato_id).first()
+    if not db_tesserato:
+        raise HTTPException(status_code=404, detail="Tesserato non trovato")
+    from app.models.utenti import Documento, GruppoTesserato
+    db.query(Documento).filter(Documento.tesserato_id == tesserato_id).delete()
+    db.query(GruppoTesserato).filter(GruppoTesserato.tesserato_id == tesserato_id).delete()
+    db.delete(db_tesserato)
+    db.commit()
+    return {"messaggio": "Tesserato eliminato definitivamente"}
 from app.models.utenti import GruppoTesserato, Gruppo
 from datetime import date
 

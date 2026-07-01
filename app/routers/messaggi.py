@@ -102,9 +102,37 @@ def invia_messaggio(dati: MessaggioCreate, db: Session = Depends(get_db)):
 
     db.commit()
     db.refresh(messaggio)
-    return messaggio
+    num_dest = db.query(MessaggioDestinatario).filter(MessaggioDestinatario.messaggio_id == messaggio.id).count()
+    num_email = db.query(MessaggioDestinatario).filter(
+        MessaggioDestinatario.messaggio_id == messaggio.id,
+        MessaggioDestinatario.email_inviata == True
+    ).count()
+    return {
+        "id": messaggio.id,
+        "intestazione": messaggio.intestazione,
+        "corpo": messaggio.corpo,
+        "data_invio": messaggio.data_invio,
+        "num_destinatari": num_dest,
+        "num_email_inviate": num_email
+    }
 
 
 @router.get("/", response_model=list[MessaggioRead])
 def lista_messaggi(db: Session = Depends(get_db)):
-    return db.query(Messaggio).order_by(Messaggio.data_invio.desc()).all()
+    messaggi = db.query(Messaggio).order_by(Messaggio.data_invio.desc()).all()
+    result = []
+    for m in messaggi:
+        num_dest = db.query(MessaggioDestinatario).filter(MessaggioDestinatario.messaggio_id == m.id).count()
+        num_email = db.query(MessaggioDestinatario).filter(
+            MessaggioDestinatario.messaggio_id == m.id,
+            MessaggioDestinatario.email_inviata == True
+        ).count()
+        result.append({
+            "id": m.id,
+            "intestazione": m.intestazione,
+            "corpo": m.corpo,
+            "data_invio": m.data_invio,
+            "num_destinatari": num_dest,
+            "num_email_inviate": num_email
+        })
+    return result

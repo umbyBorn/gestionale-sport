@@ -68,11 +68,20 @@ class TesseratoCreate(BaseModel):
     foto_url: Optional[str] = None
 
 
+class GruppoBase(BaseModel):
+    id: int
+    nome: str
+
+    class Config:
+        from_attributes = True
+
+
 class TesseratoRead(TesseratoCreate):
     id: int
     attivo: bool
     genitore: Optional[GenitoreRead] = None
     documenti: Optional[list[DocumentoRead]] = []
+    gruppi_nomi: Optional[list[str]] = []
 
     class Config:
         from_attributes = True

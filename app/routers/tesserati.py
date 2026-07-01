@@ -21,7 +21,15 @@ def lista_tutti_tesserati(db: Session = Depends(get_db)):
 
 @router.get("/", response_model=List[TesseratoRead])
 def lista_tesserati(db: Session = Depends(get_db)):
-    return db.query(Tesserato).options(joinedload(Tesserato.genitore), joinedload(Tesserato.documenti)).filter(Tesserato.attivo == True).all()
+    from sqlalchemy.orm import joinedload as jl
+    tesserati = db.query(Tesserato).options(
+        jl(Tesserato.genitore),
+        jl(Tesserato.documenti),
+        jl(Tesserato.gruppi).joinedload(Tesserato.gruppi.property.mapper.class_.gruppo)
+    ).filter(Tesserato.attivo == True).all()
+    for t in tesserati:
+        t.gruppi_nomi = [gt.gruppo.nome for gt in t.gruppi if gt.gruppo]
+    return tesserati
 
 @router.get("/{tesserato_id}", response_model=TesseratoRead)
 def get_tesserato(tesserato_id: int, db: Session = Depends(get_db)):

@@ -150,6 +150,23 @@ def invia_messaggio(dati: MessaggioCreate, db: Session = Depends(get_db)):
     }
 
 
+@router.get("/test-email")
+def test_email(destinatario: str, db: Session = Depends(get_db)):
+    import os
+    host = os.getenv("EMAIL_HOST")
+    porta = os.getenv("EMAIL_PORT")
+    utente = os.getenv("EMAIL_USER")
+    password = os.getenv("EMAIL_PASSWORD")
+    ok = invia_email(destinatario, "Test Golè", "Email di test dal sistema Golè")
+    return {
+        "host": host,
+        "porta": porta,
+        "utente": utente,
+        "password_presente": bool(password),
+        "invio_ok": ok
+    }
+
+
 @router.get("/tesserato/{tesserato_id}", response_model=list[MessaggioRead])
 def messaggi_tesserato(tesserato_id: int, db: Session = Depends(get_db)):
     destinatari = db.query(MessaggioDestinatario).filter(

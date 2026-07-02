@@ -34,6 +34,8 @@ class Token(BaseModel):
     access_token: str
     token_type: str
     ruolo: str
+    tesserato_id: Optional[int] = None
+    permessi: Optional[dict] = {}
 
 @router.post("/registra", response_model=UtenteRead)
 def registra_utente(utente: UtenteCreate, db: Session = Depends(get_db)):
@@ -59,8 +61,27 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
             detail="Email o password errati",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    token = crea_token({"sub": utente.email, "ruolo": utente.ruolo.value})
-    return {"access_token": token, "token_type": "bearer", "ruolo": utente.ruolo.value}
+    if not utente.attivo:
+        raise HTTPException(status_code=403, detail="Account disabilitato")
+
+    from app.models.utenti import Tesserato, PermessoOperatore
+    tesserato = db.query(Tesserato).filter(Tesserato.utente_id == utente.id).first()
+    permessi = db.query(PermessoOperatore).filter(PermessoOperatore.utente_id == utente.id).all()
+    permessi_dict = {p.sezione: p.abilitato for p in permessi}
+
+    token = crea_token({
+        "sub": utente.email,
+        "ruolo": utente.ruolo.value,
+        "tesserato_id": tesserato.id if tesserato else None,
+        "permessi": permessi_dict
+    })
+    return {
+        "access_token": token,
+        "token_type": "bearer",
+        "ruolo": utente.ruolo.value,
+        "tesserato_id": tesserato.id if tesserato else None,
+        "permessi": permessi_dict
+    }
 
 @router.get("/me", response_model=UtenteRead)
 def profilo(utente: Utente = Depends(get_utente_corrente)):

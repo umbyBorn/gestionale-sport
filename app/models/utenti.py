@@ -122,3 +122,21 @@ class GruppoTesserato(Base):
     data_iscrizione = Column(Date, nullable=False)
     gruppo = relationship("Gruppo", back_populates="tesserati")
     tesserato = relationship("Tesserato", back_populates="gruppi")
+
+
+class PermessoOperatore(Base):
+    __tablename__ = "permessi_operatore"
+    id = Column(Integer, primary_key=True, index=True)
+    utente_id = Column(Integer, ForeignKey("utenti.id"), nullable=False)
+    sezione = Column(String, nullable=False)
+    abilitato = Column(Boolean, default=True)
+    utente = relationship("Utente", foreign_keys=[utente_id])
+
+
+class PermessoOperatore(Base):
+    __tablename__ = "permessi_operatore"
+    id = Column(Integer, primary_key=True, index=True)
+    utente_id = Column(Integer, ForeignKey("utenti.id"), nullable=False)
+    sezione = Column(String, nullable=False)
+    abilitato = Column(Boolean, default=True)
+    utente = relationship("Utente", foreign_keys=[utente_id])

@@ -1,4 +1,4 @@
-from app.models.utenti import Utente, Tesserato, Genitore, Documento, Gruppo, GruppoTesserato, PermessoOperatore
+from app.models.utenti import Utente, Tesserato, Genitore, Documento, Gruppo, GruppoTesserato, PermessoOperatore, PushSubscription
 from app.models.contabilita import Tariffa, Pagamento, Ricevuta, MovimentoContabile
 from app.models.staff import Staff, StaffGruppo, Contratto, Compenso
 from app.models.presenze import Evento, Presenza, EventoRicorrente

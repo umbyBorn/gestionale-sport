@@ -139,6 +139,11 @@ def invia_messaggio(dati: MessaggioCreate, db: Session = Depends(get_db)):
         finally:
             bg_db.close()
 
+    # Invia anche push notifications
+    from app.routers.push import invia_push_a_tutti
+    n_push = invia_push_a_tutti(db, dati.intestazione, dati.corpo, list(id_destinatari))
+    print(f"Push inviate a {n_push} dispositivi")
+
     thread = threading.Thread(
         target=invia_in_background,
         args=(messaggio.id, lista_email, dati.intestazione, dati.corpo),

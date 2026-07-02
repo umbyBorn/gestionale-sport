@@ -132,3 +132,13 @@ class PermessoOperatore(Base):
     sezione = Column(String, nullable=False)
     abilitato = Column(Boolean, default=True)
     utente = relationship("Utente", foreign_keys=[utente_id])
+
+
+class PushSubscription(Base):
+    __tablename__ = "push_subscriptions"
+    id = Column(Integer, primary_key=True, index=True)
+    utente_id = Column(Integer, ForeignKey("utenti.id"), nullable=True)
+    tesserato_id = Column(Integer, ForeignKey("tesserati.id"), nullable=True)
+    endpoint = Column(String, nullable=False, unique=True)
+    p256dh = Column(String, nullable=False)
+    auth = Column(String, nullable=False)

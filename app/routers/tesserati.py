@@ -88,8 +88,14 @@ def elimina_tesserato_definitivo(tesserato_id: int, db: Session = Depends(get_db
     if not db_tesserato:
         raise HTTPException(status_code=404, detail="Tesserato non trovato")
     from app.models.utenti import Documento, GruppoTesserato
+    from app.models.contabilita import Pagamento
+    from app.models.presenze import Presenza
+    from app.models.messaggi import MessaggioDestinatario
     db.query(Documento).filter(Documento.tesserato_id == tesserato_id).delete()
     db.query(GruppoTesserato).filter(GruppoTesserato.tesserato_id == tesserato_id).delete()
+    db.query(Pagamento).filter(Pagamento.tesserato_id == tesserato_id).delete()
+    db.query(Presenza).filter(Presenza.tesserato_id == tesserato_id).delete()
+    db.query(MessaggioDestinatario).filter(MessaggioDestinatario.tesserato_id == tesserato_id).delete()
     db.delete(db_tesserato)
     db.commit()
     return {"messaggio": "Tesserato eliminato definitivamente"}

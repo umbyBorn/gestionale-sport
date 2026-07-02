@@ -36,14 +36,25 @@ def invia_email(destinatario: str, intestazione: str, corpo: str):
     msg.attach(MIMEText(corpo, "plain"))
 
     try:
-        with smtplib.SMTP(host, porta, timeout=10) as server:
-            server.ehlo()
-            server.starttls()
-            server.ehlo()
-            server.login(utente, password)
-            server.sendmail(mittente, destinatario, msg.as_string())
-        print(f"Email inviata a {destinatario}")
-        return True
+        # Prova prima con SSL su porta 465
+        import smtplib as _smtp
+        try:
+            with _smtp.SMTP_SSL(host, 465, timeout=10) as server:
+                server.ehlo()
+                server.login(utente, password)
+                server.sendmail(mittente, destinatario, msg.as_string())
+            print(f"Email inviata (SSL) a {destinatario}")
+            return True
+        except Exception as e1:
+            print(f"SSL fallito: {e1}, provo TLS...")
+            with _smtp.SMTP(host, porta, timeout=10) as server:
+                server.ehlo()
+                server.starttls()
+                server.ehlo()
+                server.login(utente, password)
+                server.sendmail(mittente, destinatario, msg.as_string())
+            print(f"Email inviata (TLS) a {destinatario}")
+            return True
     except Exception as e:
         print(f"Errore invio email a {destinatario}: {e}")
         return False

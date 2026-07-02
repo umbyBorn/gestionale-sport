@@ -6,6 +6,7 @@ import enum
 
 class RuoloEnum(enum.Enum):
     amministratore = "amministratore"
+    operatore = "operatore"
     staff = "staff"
     commercialista = "commercialista"
     tesserato = "tesserato"

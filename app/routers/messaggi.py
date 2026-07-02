@@ -150,6 +150,28 @@ def invia_messaggio(dati: MessaggioCreate, db: Session = Depends(get_db)):
     }
 
 
+@router.get("/tesserato/{tesserato_id}", response_model=list[MessaggioRead])
+def messaggi_tesserato(tesserato_id: int, db: Session = Depends(get_db)):
+    destinatari = db.query(MessaggioDestinatario).filter(
+        MessaggioDestinatario.tesserato_id == tesserato_id
+    ).all()
+    messaggi_ids = [d.messaggio_id for d in destinatari]
+    messaggi = db.query(Messaggio).filter(
+        Messaggio.id.in_(messaggi_ids)
+    ).order_by(Messaggio.data_invio.desc()).all()
+    result = []
+    for m in messaggi:
+        result.append({
+            "id": m.id,
+            "intestazione": m.intestazione,
+            "corpo": m.corpo,
+            "data_invio": m.data_invio,
+            "num_destinatari": 1,
+            "num_email_inviate": 0
+        })
+    return result
+
+
 @router.get("/", response_model=list[MessaggioRead])
 def lista_messaggi(db: Session = Depends(get_db)):
     messaggi = db.query(Messaggio).order_by(Messaggio.data_invio.desc()).all()

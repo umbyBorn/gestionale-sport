@@ -66,7 +66,17 @@ def test_send(subscription_id: int, db: Session = Depends(get_db)):
     try:
         from pywebpush import webpush
         import json
-        private_key = os.getenv("VAPID_PRIVATE_KEY", "").replace("\\n", "\n")
+        import base64
+        from cryptography.hazmat.primitives.serialization import load_der_private_key
+        private_key_b64 = os.getenv("VAPID_PRIVATE_KEY", "")
+        if private_key_b64.startswith("-----"):
+            private_key = private_key_b64.replace("\\n", "\n")
+        else:
+            padding = '=' * (4 - len(private_key_b64) % 4) if len(private_key_b64) % 4 else ''
+            private_key_der = base64.urlsafe_b64decode(private_key_b64 + padding)
+            private_key_obj = load_der_private_key(private_key_der, password=None)
+            from cryptography.hazmat.primitives.serialization import Encoding, PrivateFormat, NoEncryption
+            private_key = private_key_obj.private_bytes(Encoding.PEM, PrivateFormat.PKCS8, NoEncryption()).decode()
         mailto = os.getenv("VAPID_MAILTO", "mailto:admin@example.com")
         webpush(
             subscription_info={"endpoint": sub.endpoint, "keys": {"p256dh": sub.p256dh, "auth": sub.auth}},
@@ -77,6 +87,12 @@ def test_send(subscription_id: int, db: Session = Depends(get_db)):
         return {"ok": True, "endpoint": sub.endpoint[:50]}
     except Exception as e:
         return {"ok": False, "errore": str(e), "endpoint": sub.endpoint[:50]}
+
+@router.delete("/clear-all")
+def clear_all_subscriptions(db: Session = Depends(get_db)):
+    n = db.query(PushSubscription).delete()
+    db.commit()
+    return {"eliminati": n}
 
 @router.get("/subscriptions")
 def lista_subscriptions(db: Session = Depends(get_db)):

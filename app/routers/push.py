@@ -19,8 +19,8 @@ def get_db():
 
 class SubscriptionData(BaseModel):
     endpoint: str
-    p256dh: str
-    auth: str
+    p256dh: Optional[str] = None
+    auth: Optional[str] = None
     utente_id: Optional[int] = None
     tesserato_id: Optional[int] = None
 

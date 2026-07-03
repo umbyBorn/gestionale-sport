@@ -58,6 +58,14 @@ def unsubscribe(endpoint: str, db: Session = Depends(get_db)):
 
 
 @router.get("/vapid-public-key")
+@router.post("/test-send/{subscription_id}")
+def test_send(subscription_id: int, db: Session = Depends(get_db)):
+    sub = db.query(PushSubscription).filter(PushSubscription.id == subscription_id).first()
+    if not sub:
+        return {"error": "subscription non trovata"}
+    ok = invia_push(sub.endpoint, sub.p256dh, sub.auth, "Test Golè", "Messaggio di test push")
+    return {"ok": ok, "endpoint": sub.endpoint[:50]}
+
 @router.get("/subscriptions")
 def lista_subscriptions(db: Session = Depends(get_db)):
     subs = db.query(PushSubscription).all()

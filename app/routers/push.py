@@ -63,8 +63,20 @@ def test_send(subscription_id: int, db: Session = Depends(get_db)):
     sub = db.query(PushSubscription).filter(PushSubscription.id == subscription_id).first()
     if not sub:
         return {"error": "subscription non trovata"}
-    ok = invia_push(sub.endpoint, sub.p256dh, sub.auth, "Test Golè", "Messaggio di test push")
-    return {"ok": ok, "endpoint": sub.endpoint[:50]}
+    try:
+        from pywebpush import webpush
+        import json
+        private_key = os.getenv("VAPID_PRIVATE_KEY", "").replace("\\n", "\n")
+        mailto = os.getenv("VAPID_MAILTO", "mailto:admin@example.com")
+        webpush(
+            subscription_info={"endpoint": sub.endpoint, "keys": {"p256dh": sub.p256dh, "auth": sub.auth}},
+            data=json.dumps({"title": "Test Golè", "body": "Test push"}),
+            vapid_private_key=private_key,
+            vapid_claims={"sub": mailto}
+        )
+        return {"ok": True, "endpoint": sub.endpoint[:50]}
+    except Exception as e:
+        return {"ok": False, "errore": str(e), "endpoint": sub.endpoint[:50]}
 
 @router.get("/subscriptions")
 def lista_subscriptions(db: Session = Depends(get_db)):

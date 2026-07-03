@@ -58,6 +58,13 @@ def unsubscribe(endpoint: str, db: Session = Depends(get_db)):
 
 
 @router.get("/vapid-public-key")
+@router.get("/subscriptions")
+def lista_subscriptions(db: Session = Depends(get_db)):
+    subs = db.query(PushSubscription).all()
+    return [{"id": s.id, "endpoint": s.endpoint[:50]+"...", "tesserato_id": s.tesserato_id, "utente_id": s.utente_id} for s in subs]
+
+
+@router.get("/vapid-public-key")
 def get_vapid_public_key():
     return {"public_key": os.getenv("VAPID_PUBLIC_KEY", "")}
 

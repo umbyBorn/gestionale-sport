@@ -75,6 +75,10 @@ def invia_push(endpoint: str, p256dh: str, auth: str, titolo: str, corpo: str) -
         private_key = os.getenv("VAPID_PRIVATE_KEY", "").replace("\\n", "\n")
         mailto = os.getenv("VAPID_MAILTO", "mailto:admin@example.com")
         
+        print(f"[PUSH] Invio a endpoint: {endpoint[:50]}...")
+        print(f"[PUSH] Chiave privata presente: {bool(private_key)}, lunghezza: {len(private_key)}")
+        print(f"[PUSH] Contiene BEGIN: {'BEGIN PRIVATE KEY' in private_key}")
+        
         webpush(
             subscription_info={
                 "endpoint": endpoint,
@@ -84,9 +88,10 @@ def invia_push(endpoint: str, p256dh: str, auth: str, titolo: str, corpo: str) -
             vapid_private_key=private_key,
             vapid_claims={"sub": mailto}
         )
+        print(f"[PUSH] Inviata con successo a {endpoint[:50]}")
         return True
     except Exception as e:
-        print(f"Errore push: {e}")
+        print(f"[PUSH] Errore: {type(e).__name__}: {e}")
         return False
 
 

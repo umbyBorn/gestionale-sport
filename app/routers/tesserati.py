@@ -242,3 +242,82 @@ async def carica_foto(
     db.commit()
     db.refresh(tesserato)
     return {"foto_url": tesserato.foto_url}
+
+
+# ---- COMPAGNI DI GRUPPO ----
+@router.get("/{tesserato_id}/compagni")
+def compagni_di_gruppo(tesserato_id: int, db: Session = Depends(get_db)):
+    from app.models.utenti import GruppoTesserato as GT
+    # Trova i gruppi del tesserato
+    gruppi_ids = [gt.gruppo_id for gt in db.query(GT).filter(GT.tesserato_id == tesserato_id).all()]
+    if not gruppi_ids:
+        return []
+    # Trova tutti i tesserati in quei gruppi (escluso se stesso)
+    compagni = (
+        db.query(Tesserato)
+        .join(GT, GT.tesserato_id == Tesserato.id)
+        .filter(GT.gruppo_id.in_(gruppi_ids), Tesserato.id != tesserato_id, Tesserato.attivo == True)
+        .all()
+    )
+    # Deduplicazione
+    seen = set()
+    result = []
+    for c in compagni:
+        if c.id not in seen:
+            seen.add(c.id)
+            result.append({
+                "id": c.id,
+                "nome": c.nome,
+                "cognome": c.cognome,
+                "foto_url": c.foto_url,
+                "categoria": c.categoria,
+            })
+    return sorted(result, key=lambda x: x["cognome"])
+
+
+# ---- STATISTICHE PRESENZE TESSERATO ----
+@router.get("/{tesserato_id}/statistiche")
+def statistiche_tesserato(tesserato_id: int, db: Session = Depends(get_db)):
+    from app.models.presenze import Presenza, Evento
+    from app.models.utenti import GruppoTesserato as GT
+
+    # Tutti gli eventi dei gruppi del tesserato
+    gruppi_ids = [gt.gruppo_id for gt in db.query(GT).filter(GT.tesserato_id == tesserato_id).all()]
+    
+    if not gruppi_ids:
+        return {"totale_eventi": 0, "presenze": 0, "assenze": 0, "percentuale": 0, "streak": 0}
+
+    eventi_gruppo = db.query(Evento).filter(Evento.gruppo_id.in_(gruppi_ids)).all()
+    totale = len(eventi_gruppo)
+    eventi_ids = [e.id for e in eventi_gruppo]
+
+    presenze = db.query(Presenza).filter(
+        Presenza.tesserato_id == tesserato_id,
+        Presenza.evento_id.in_(eventi_ids)
+    ).all()
+
+    n_presenti = sum(1 for p in presenze if p.presente)
+    n_assenti = sum(1 for p in presenze if not p.presente)
+    percentuale = round(n_presenti / totale * 100) if totale > 0 else 0
+
+    # Calcola streak (presenze consecutive più recenti)
+    presenze_ordinate = sorted(
+        [p for p in presenze if p.presente],
+        key=lambda p: p.evento_id,
+        reverse=True
+    )
+    streak = 0
+    for p in presenze_ordinate:
+        if p.presente:
+            streak += 1
+        else:
+            break
+
+    return {
+        "totale_eventi": totale,
+        "presenze": n_presenti,
+        "assenze": n_assenti,
+        "non_registrate": totale - len(presenze),
+        "percentuale": percentuale,
+        "streak": streak,
+    }

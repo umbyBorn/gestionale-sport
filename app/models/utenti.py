@@ -142,3 +142,51 @@ class PushSubscription(Base):
     endpoint = Column(String, nullable=False, unique=True)
     p256dh = Column(String, nullable=False)
     auth = Column(String, nullable=False)
+
+
+class RichiestaIscrizione(Base):
+    __tablename__ = "richieste_iscrizione"
+    id = Column(Integer, primary_key=True, index=True)
+    token = Column(String, unique=True, nullable=False, index=True)
+    nome_modulo = Column(String, nullable=False)
+    attivo = Column(Boolean, default=True)
+    created_at = Column(String, nullable=True)
+
+    # Dati compilati dal tesserato
+    richieste = relationship("DatiRichiesta", back_populates="modulo")
+
+
+class DatiRichiesta(Base):
+    __tablename__ = "dati_richiesta"
+    id = Column(Integer, primary_key=True, index=True)
+    modulo_id = Column(Integer, ForeignKey("richieste_iscrizione.id"), nullable=False)
+    stato = Column(String, default="in_attesa")  # in_attesa, approvata, rifiutata
+    nome = Column(String, nullable=False)
+    cognome = Column(String, nullable=False)
+    data_nascita = Column(String, nullable=False)
+    codice_fiscale = Column(String, nullable=True)
+    email = Column(String, nullable=True)
+    telefono = Column(String, nullable=True)
+    cellulare = Column(String, nullable=True)
+    indirizzo = Column(String, nullable=True)
+    comune_residenza = Column(String, nullable=True)
+    provincia_residenza = Column(String, nullable=True)
+    cap_residenza = Column(String, nullable=True)
+    comune_nascita = Column(String, nullable=True)
+    provincia_nascita = Column(String, nullable=True)
+    stato_nascita = Column(String, nullable=True)
+    sesso = Column(String, nullable=True)
+    sport = Column(String, nullable=True)
+    # Genitore (per minorenni)
+    genitore_nome = Column(String, nullable=True)
+    genitore_cognome = Column(String, nullable=True)
+    genitore_email = Column(String, nullable=True)
+    genitore_telefono = Column(String, nullable=True)
+    genitore_documento_tipo = Column(String, nullable=True)
+    genitore_documento_numero = Column(String, nullable=True)
+    # Privacy
+    consenso_privacy = Column(Boolean, default=False)
+    data_invio = Column(String, nullable=True)
+    note = Column(String, nullable=True)
+
+    modulo = relationship("RichiestaIscrizione", back_populates="richieste")

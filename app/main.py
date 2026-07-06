@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.routers import tesserati, gruppi, pagamenti, staff, presenze, assemblee
-from app.routers import auth, calendario, importazione, messaggi, admin, push
+from app.routers import auth, calendario, importazione, messaggi, admin, push, iscrizioni
 from alembic.config import Config
 from alembic import command
 
@@ -40,6 +40,7 @@ app.include_router(importazione.router)
 app.include_router(messaggi.router)
 app.include_router(admin.router)
 app.include_router(push.router)
+app.include_router(iscrizioni.router)
 
 @app.get("/")
 def root():

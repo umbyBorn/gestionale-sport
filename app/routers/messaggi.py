@@ -6,6 +6,7 @@ from app.models.messaggi import Messaggio, MessaggioDestinatario
 from app.schemas.messaggi import MessaggioCreate, MessaggioRead
 import smtplib
 import threading
+import resend
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 import os
@@ -20,43 +21,23 @@ def get_db():
         db.close()
 
 def invia_email(destinatario: str, intestazione: str, corpo: str):
-    host = os.getenv("EMAIL_HOST")
-    porta = int(os.getenv("EMAIL_PORT", "587"))
-    utente = os.getenv("EMAIL_USER")
-    password = os.getenv("EMAIL_PASSWORD")
-    mittente = os.getenv("EMAIL_FROM", utente)
-
-    if not host or not utente or not password:
+    api_key = os.getenv("RESEND_API_KEY")
+    if not api_key:
+        print("RESEND_API_KEY non configurata")
         return False
-
-    msg = MIMEMultipart()
-    msg["From"] = mittente
-    msg["To"] = destinatario
-    msg["Subject"] = intestazione
-    msg.attach(MIMEText(corpo, "plain"))
-
     try:
-        # Prova prima con SSL su porta 465
-        import smtplib as _smtp
-        try:
-            with _smtp.SMTP_SSL(host, 465, timeout=10) as server:
-                server.ehlo()
-                server.login(utente, password)
-                server.sendmail(mittente, destinatario, msg.as_string())
-            print(f"Email inviata (SSL) a {destinatario}")
-            return True
-        except Exception as e1:
-            print(f"SSL fallito: {e1}, provo TLS...")
-            with _smtp.SMTP(host, porta, timeout=10) as server:
-                server.ehlo()
-                server.starttls()
-                server.ehlo()
-                server.login(utente, password)
-                server.sendmail(mittente, destinatario, msg.as_string())
-            print(f"Email inviata (TLS) a {destinatario}")
-            return True
+        resend.api_key = api_key
+        mittente = os.getenv("EMAIL_FROM", "noreply@resend.dev")
+        resend.Emails.send({
+            "from": f"Golè Gestionale <{mittente}>",
+            "to": [destinatario],
+            "subject": intestazione,
+            "text": corpo,
+        })
+        print(f"Email inviata via Resend a {destinatario}")
+        return True
     except Exception as e:
-        print(f"Errore invio email a {destinatario}: {e}")
+        print(f"Errore Resend a {destinatario}: {e}")
         return False
 
 
@@ -168,17 +149,11 @@ def invia_messaggio(dati: MessaggioCreate, db: Session = Depends(get_db)):
 
 @router.get("/test-email")
 def test_email(destinatario: str, db: Session = Depends(get_db)):
-    import os
-    host = os.getenv("EMAIL_HOST")
-    porta = os.getenv("EMAIL_PORT")
-    utente = os.getenv("EMAIL_USER")
-    password = os.getenv("EMAIL_PASSWORD")
-    ok = invia_email(destinatario, "Test Golè", "Email di test dal sistema Golè")
+    api_key = os.getenv("RESEND_API_KEY")
+    ok = invia_email(destinatario, "Test Golè", "Email di test dal sistema Golè tramite Resend")
     return {
-        "host": host,
-        "porta": porta,
-        "utente": utente,
-        "password_presente": bool(password),
+        "resend_api_key_presente": bool(api_key),
+        "destinatario": destinatario,
         "invio_ok": ok
     }
 

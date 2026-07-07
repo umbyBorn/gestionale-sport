@@ -27,9 +27,8 @@ def invia_email(destinatario: str, intestazione: str, corpo: str):
         return False
     try:
         resend.api_key = api_key
-        mittente = os.getenv("EMAIL_FROM", "noreply@resend.dev")
         resend.Emails.send({
-            "from": f"Golè Gestionale <{mittente}>",
+            "from": "Golè Gestionale <onboarding@resend.dev>",
             "to": [destinatario],
             "subject": intestazione,
             "text": corpo,

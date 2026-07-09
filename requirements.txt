@@ -34,3 +34,4 @@ pandas==3.0.4
 cloudinary==1.44.4
 pywebpush==2.3.0
 resend==2.32.2
+reportlab==5.0.0

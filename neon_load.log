@@ -1,0 +1,407 @@
+SET
+SET
+SET
+SET
+SET
+SET
+ set_config 
+------------
+ 
+(1 row)
+
+SET
+SET
+SET
+SET
+psql:backup_gole_neon_final.sql:33: ERROR:  type "metodopagamentoenum" already exists
+psql:backup_gole_neon_final.sql:46: ERROR:  type "ruoloenum" already exists
+psql:backup_gole_neon_final.sql:56: ERROR:  type "statoassembleaenum" already exists
+psql:backup_gole_neon_final.sql:65: ERROR:  type "tipocontrattoenum" already exists
+psql:backup_gole_neon_final.sql:76: ERROR:  type "tipoeventoenum" already exists
+psql:backup_gole_neon_final.sql:85: ERROR:  type "tipomovimentoenum" already exists
+psql:backup_gole_neon_final.sql:95: ERROR:  type "tiporapportoenum" already exists
+psql:backup_gole_neon_final.sql:105: ERROR:  type "tipovotoenum" already exists
+SET
+SET
+psql:backup_gole_neon_final.sql:117: ERROR:  relation "alembic_version" already exists
+psql:backup_gole_neon_final.sql:132: ERROR:  relation "assemblee" already exists
+psql:backup_gole_neon_final.sql:144: ERROR:  relation "assemblee_id_seq" already exists
+ALTER SEQUENCE
+psql:backup_gole_neon_final.sql:165: ERROR:  relation "compensi" already exists
+psql:backup_gole_neon_final.sql:177: ERROR:  relation "compensi_id_seq" already exists
+ALTER SEQUENCE
+psql:backup_gole_neon_final.sql:198: ERROR:  relation "contratti" already exists
+psql:backup_gole_neon_final.sql:210: ERROR:  relation "contratti_id_seq" already exists
+ALTER SEQUENCE
+psql:backup_gole_neon_final.sql:251: ERROR:  relation "dati_richiesta" already exists
+psql:backup_gole_neon_final.sql:263: ERROR:  relation "dati_richiesta_id_seq" already exists
+ALTER SEQUENCE
+psql:backup_gole_neon_final.sql:283: ERROR:  relation "documenti" already exists
+psql:backup_gole_neon_final.sql:295: ERROR:  relation "documenti_id_seq" already exists
+ALTER SEQUENCE
+psql:backup_gole_neon_final.sql:318: ERROR:  relation "eventi" already exists
+psql:backup_gole_neon_final.sql:330: ERROR:  relation "eventi_id_seq" already exists
+ALTER SEQUENCE
+psql:backup_gole_neon_final.sql:354: ERROR:  relation "eventi_ricorrenti" already exists
+psql:backup_gole_neon_final.sql:366: ERROR:  relation "eventi_ricorrenti_id_seq" already exists
+ALTER SEQUENCE
+psql:backup_gole_neon_final.sql:386: ERROR:  relation "genitori" already exists
+psql:backup_gole_neon_final.sql:398: ERROR:  relation "genitori_id_seq" already exists
+ALTER SEQUENCE
+psql:backup_gole_neon_final.sql:415: ERROR:  relation "gruppi" already exists
+psql:backup_gole_neon_final.sql:427: ERROR:  relation "gruppi_id_seq" already exists
+ALTER SEQUENCE
+psql:backup_gole_neon_final.sql:444: ERROR:  relation "gruppo_tesserato" already exists
+psql:backup_gole_neon_final.sql:456: ERROR:  relation "gruppo_tesserato_id_seq" already exists
+ALTER SEQUENCE
+psql:backup_gole_neon_final.sql:473: ERROR:  relation "messaggi" already exists
+psql:backup_gole_neon_final.sql:485: ERROR:  relation "messaggi_destinatari" already exists
+psql:backup_gole_neon_final.sql:497: ERROR:  relation "messaggi_destinatari_id_seq" already exists
+ALTER SEQUENCE
+psql:backup_gole_neon_final.sql:515: ERROR:  relation "messaggi_id_seq" already exists
+ALTER SEQUENCE
+psql:backup_gole_neon_final.sql:538: ERROR:  relation "movimenti_contabili" already exists
+psql:backup_gole_neon_final.sql:550: ERROR:  relation "movimenti_contabili_id_seq" already exists
+ALTER SEQUENCE
+psql:backup_gole_neon_final.sql:572: ERROR:  relation "pagamenti" already exists
+psql:backup_gole_neon_final.sql:584: ERROR:  relation "pagamenti_id_seq" already exists
+ALTER SEQUENCE
+psql:backup_gole_neon_final.sql:603: ERROR:  relation "partecipazioni_assemblea" already exists
+psql:backup_gole_neon_final.sql:615: ERROR:  relation "partecipazioni_assemblea_id_seq" already exists
+ALTER SEQUENCE
+psql:backup_gole_neon_final.sql:632: ERROR:  relation "permessi_operatore" already exists
+psql:backup_gole_neon_final.sql:644: ERROR:  relation "permessi_operatore_id_seq" already exists
+ALTER SEQUENCE
+psql:backup_gole_neon_final.sql:662: ERROR:  relation "presenze" already exists
+psql:backup_gole_neon_final.sql:674: ERROR:  relation "presenze_id_seq" already exists
+ALTER SEQUENCE
+psql:backup_gole_neon_final.sql:693: ERROR:  relation "punti_ordine_giorno" already exists
+psql:backup_gole_neon_final.sql:705: ERROR:  relation "punti_ordine_giorno_id_seq" already exists
+ALTER SEQUENCE
+psql:backup_gole_neon_final.sql:724: ERROR:  relation "push_subscriptions" already exists
+psql:backup_gole_neon_final.sql:736: ERROR:  relation "push_subscriptions_id_seq" already exists
+ALTER SEQUENCE
+psql:backup_gole_neon_final.sql:756: ERROR:  relation "ricevute" already exists
+psql:backup_gole_neon_final.sql:768: ERROR:  relation "ricevute_id_seq" already exists
+ALTER SEQUENCE
+psql:backup_gole_neon_final.sql:786: ERROR:  relation "richieste_iscrizione" already exists
+psql:backup_gole_neon_final.sql:798: ERROR:  relation "richieste_iscrizione_id_seq" already exists
+ALTER SEQUENCE
+psql:backup_gole_neon_final.sql:823: ERROR:  relation "staff" already exists
+psql:backup_gole_neon_final.sql:833: ERROR:  relation "staff_gruppo" already exists
+psql:backup_gole_neon_final.sql:845: ERROR:  relation "staff_gruppo_id_seq" already exists
+ALTER SEQUENCE
+psql:backup_gole_neon_final.sql:863: ERROR:  relation "staff_id_seq" already exists
+ALTER SEQUENCE
+psql:backup_gole_neon_final.sql:881: ERROR:  relation "tariffe" already exists
+psql:backup_gole_neon_final.sql:893: ERROR:  relation "tariffe_id_seq" already exists
+ALTER SEQUENCE
+psql:backup_gole_neon_final.sql:939: ERROR:  relation "tesserati" already exists
+psql:backup_gole_neon_final.sql:951: ERROR:  relation "tesserati_id_seq" already exists
+ALTER SEQUENCE
+psql:backup_gole_neon_final.sql:969: ERROR:  relation "utenti" already exists
+psql:backup_gole_neon_final.sql:981: ERROR:  relation "utenti_id_seq" already exists
+ALTER SEQUENCE
+ALTER TABLE
+ALTER TABLE
+ALTER TABLE
+ALTER TABLE
+ALTER TABLE
+ALTER TABLE
+ALTER TABLE
+ALTER TABLE
+ALTER TABLE
+ALTER TABLE
+ALTER TABLE
+ALTER TABLE
+ALTER TABLE
+ALTER TABLE
+ALTER TABLE
+ALTER TABLE
+ALTER TABLE
+ALTER TABLE
+ALTER TABLE
+ALTER TABLE
+ALTER TABLE
+ALTER TABLE
+ALTER TABLE
+ALTER TABLE
+ALTER TABLE
+ALTER TABLE
+psql:backup_gole_neon_final.sql:1152: ERROR:  duplicate key value violates unique constraint "alembic_version_pkc"
+DETAIL:  Key (version_num)=(957aaca85b47) already exists.
+CONTEXT:  COPY alembic_version, line 1
+COPY 0
+COPY 0
+COPY 0
+psql:backup_gole_neon_final.sql:1186: ERROR:  duplicate key value violates unique constraint "dati_richiesta_pkey"
+DETAIL:  Key (id)=(1) already exists.
+CONTEXT:  COPY dati_richiesta, line 1
+psql:backup_gole_neon_final.sql:1195: ERROR:  duplicate key value violates unique constraint "documenti_pkey"
+DETAIL:  Key (id)=(1) already exists.
+CONTEXT:  COPY documenti, line 1
+psql:backup_gole_neon_final.sql:1400: ERROR:  duplicate key value violates unique constraint "eventi_pkey"
+DETAIL:  Key (id)=(1) already exists.
+CONTEXT:  COPY eventi, line 1
+psql:backup_gole_neon_final.sql:1411: ERROR:  duplicate key value violates unique constraint "eventi_ricorrenti_pkey"
+DETAIL:  Key (id)=(1) already exists.
+CONTEXT:  COPY eventi_ricorrenti, line 1
+psql:backup_gole_neon_final.sql:1421: ERROR:  duplicate key value violates unique constraint "genitori_pkey"
+DETAIL:  Key (id)=(1) already exists.
+CONTEXT:  COPY genitori, line 1
+psql:backup_gole_neon_final.sql:1436: ERROR:  duplicate key value violates unique constraint "gruppi_pkey"
+DETAIL:  Key (id)=(1) already exists.
+CONTEXT:  COPY gruppi, line 1
+psql:backup_gole_neon_final.sql:1470: ERROR:  duplicate key value violates unique constraint "gruppo_tesserato_pkey"
+DETAIL:  Key (id)=(3) already exists.
+CONTEXT:  COPY gruppo_tesserato, line 1
+psql:backup_gole_neon_final.sql:1510: ERROR:  duplicate key value violates unique constraint "messaggi_pkey"
+DETAIL:  Key (id)=(1) already exists.
+CONTEXT:  COPY messaggi, line 1
+psql:backup_gole_neon_final.sql:1590: ERROR:  duplicate key value violates unique constraint "messaggi_destinatari_pkey"
+DETAIL:  Key (id)=(1) already exists.
+CONTEXT:  COPY messaggi_destinatari, line 1
+COPY 0
+psql:backup_gole_neon_final.sql:1607: ERROR:  duplicate key value violates unique constraint "pagamenti_pkey"
+DETAIL:  Key (id)=(6) already exists.
+CONTEXT:  COPY pagamenti, line 1
+COPY 0
+psql:backup_gole_neon_final.sql:1632: ERROR:  duplicate key value violates unique constraint "permessi_operatore_pkey"
+DETAIL:  Key (id)=(1) already exists.
+CONTEXT:  COPY permessi_operatore, line 1
+psql:backup_gole_neon_final.sql:1649: ERROR:  duplicate key value violates unique constraint "presenze_pkey"
+DETAIL:  Key (id)=(3) already exists.
+CONTEXT:  COPY presenze, line 1
+COPY 0
+COPY 0
+COPY 0
+psql:backup_gole_neon_final.sql:1682: ERROR:  duplicate key value violates unique constraint "richieste_iscrizione_pkey"
+DETAIL:  Key (id)=(1) already exists.
+CONTEXT:  COPY richieste_iscrizione, line 1
+COPY 0
+COPY 0
+psql:backup_gole_neon_final.sql:1707: ERROR:  duplicate key value violates unique constraint "tariffe_pkey"
+DETAIL:  Key (id)=(1) already exists.
+CONTEXT:  COPY tariffe, line 1
+psql:backup_gole_neon_final.sql:1846: ERROR:  duplicate key value violates unique constraint "tesserati_codice_fiscale_key"
+DETAIL:  Key (codice_fiscale)=(TEMP_776DE32A) already exists.
+CONTEXT:  COPY tesserati, line 1
+psql:backup_gole_neon_final.sql:1858: ERROR:  duplicate key value violates unique constraint "utenti_pkey"
+DETAIL:  Key (id)=(1) already exists.
+CONTEXT:  COPY utenti, line 1
+ setval 
+--------
+      1
+(1 row)
+
+ setval 
+--------
+      1
+(1 row)
+
+ setval 
+--------
+      1
+(1 row)
+
+ setval 
+--------
+      2
+(1 row)
+
+ setval 
+--------
+      2
+(1 row)
+
+ setval 
+--------
+    200
+(1 row)
+
+ setval 
+--------
+      3
+(1 row)
+
+ setval 
+--------
+      2
+(1 row)
+
+ setval 
+--------
+      7
+(1 row)
+
+ setval 
+--------
+     32
+(1 row)
+
+ setval 
+--------
+     72
+(1 row)
+
+ setval 
+--------
+     32
+(1 row)
+
+ setval 
+--------
+      1
+(1 row)
+
+ setval 
+--------
+      6
+(1 row)
+
+ setval 
+--------
+      1
+(1 row)
+
+ setval 
+--------
+      9
+(1 row)
+
+ setval 
+--------
+     11
+(1 row)
+
+ setval 
+--------
+      1
+(1 row)
+
+ setval 
+--------
+      2
+(1 row)
+
+ setval 
+--------
+      1
+(1 row)
+
+ setval 
+--------
+      1
+(1 row)
+
+ setval 
+--------
+      1
+(1 row)
+
+ setval 
+--------
+      1
+(1 row)
+
+ setval 
+--------
+      1
+(1 row)
+
+ setval 
+--------
+    149
+(1 row)
+
+ setval 
+--------
+      7
+(1 row)
+
+psql:backup_gole_neon_final.sql:2021: ERROR:  multiple primary keys for table "alembic_version" are not allowed
+psql:backup_gole_neon_final.sql:2028: ERROR:  multiple primary keys for table "assemblee" are not allowed
+psql:backup_gole_neon_final.sql:2035: ERROR:  multiple primary keys for table "compensi" are not allowed
+psql:backup_gole_neon_final.sql:2042: ERROR:  multiple primary keys for table "contratti" are not allowed
+psql:backup_gole_neon_final.sql:2049: ERROR:  multiple primary keys for table "dati_richiesta" are not allowed
+psql:backup_gole_neon_final.sql:2056: ERROR:  multiple primary keys for table "documenti" are not allowed
+psql:backup_gole_neon_final.sql:2063: ERROR:  multiple primary keys for table "eventi" are not allowed
+psql:backup_gole_neon_final.sql:2070: ERROR:  multiple primary keys for table "eventi_ricorrenti" are not allowed
+psql:backup_gole_neon_final.sql:2077: ERROR:  multiple primary keys for table "genitori" are not allowed
+psql:backup_gole_neon_final.sql:2084: ERROR:  multiple primary keys for table "gruppi" are not allowed
+psql:backup_gole_neon_final.sql:2091: ERROR:  multiple primary keys for table "gruppo_tesserato" are not allowed
+psql:backup_gole_neon_final.sql:2098: ERROR:  multiple primary keys for table "messaggi_destinatari" are not allowed
+psql:backup_gole_neon_final.sql:2105: ERROR:  multiple primary keys for table "messaggi" are not allowed
+psql:backup_gole_neon_final.sql:2112: ERROR:  multiple primary keys for table "movimenti_contabili" are not allowed
+psql:backup_gole_neon_final.sql:2119: ERROR:  multiple primary keys for table "pagamenti" are not allowed
+psql:backup_gole_neon_final.sql:2126: ERROR:  multiple primary keys for table "partecipazioni_assemblea" are not allowed
+psql:backup_gole_neon_final.sql:2133: ERROR:  multiple primary keys for table "permessi_operatore" are not allowed
+psql:backup_gole_neon_final.sql:2140: ERROR:  multiple primary keys for table "presenze" are not allowed
+psql:backup_gole_neon_final.sql:2147: ERROR:  multiple primary keys for table "punti_ordine_giorno" are not allowed
+psql:backup_gole_neon_final.sql:2154: ERROR:  relation "push_subscriptions_endpoint_key" already exists
+psql:backup_gole_neon_final.sql:2161: ERROR:  multiple primary keys for table "push_subscriptions" are not allowed
+psql:backup_gole_neon_final.sql:2168: ERROR:  relation "ricevute_numero_key" already exists
+psql:backup_gole_neon_final.sql:2175: ERROR:  multiple primary keys for table "ricevute" are not allowed
+psql:backup_gole_neon_final.sql:2182: ERROR:  multiple primary keys for table "richieste_iscrizione" are not allowed
+psql:backup_gole_neon_final.sql:2189: ERROR:  relation "staff_codice_fiscale_key" already exists
+psql:backup_gole_neon_final.sql:2196: ERROR:  multiple primary keys for table "staff_gruppo" are not allowed
+psql:backup_gole_neon_final.sql:2203: ERROR:  multiple primary keys for table "staff" are not allowed
+psql:backup_gole_neon_final.sql:2210: ERROR:  multiple primary keys for table "tariffe" are not allowed
+psql:backup_gole_neon_final.sql:2217: ERROR:  relation "tesserati_codice_fiscale_key" already exists
+psql:backup_gole_neon_final.sql:2224: ERROR:  multiple primary keys for table "tesserati" are not allowed
+psql:backup_gole_neon_final.sql:2231: ERROR:  multiple primary keys for table "utenti" are not allowed
+psql:backup_gole_neon_final.sql:2237: ERROR:  relation "ix_assemblee_id" already exists
+psql:backup_gole_neon_final.sql:2243: ERROR:  relation "ix_compensi_id" already exists
+psql:backup_gole_neon_final.sql:2249: ERROR:  relation "ix_contratti_id" already exists
+psql:backup_gole_neon_final.sql:2255: ERROR:  relation "ix_dati_richiesta_id" already exists
+psql:backup_gole_neon_final.sql:2261: ERROR:  relation "ix_documenti_id" already exists
+psql:backup_gole_neon_final.sql:2267: ERROR:  relation "ix_eventi_id" already exists
+psql:backup_gole_neon_final.sql:2273: ERROR:  relation "ix_eventi_ricorrenti_id" already exists
+psql:backup_gole_neon_final.sql:2279: ERROR:  relation "ix_genitori_id" already exists
+psql:backup_gole_neon_final.sql:2285: ERROR:  relation "ix_gruppi_id" already exists
+psql:backup_gole_neon_final.sql:2291: ERROR:  relation "ix_gruppo_tesserato_id" already exists
+psql:backup_gole_neon_final.sql:2297: ERROR:  relation "ix_messaggi_destinatari_id" already exists
+psql:backup_gole_neon_final.sql:2303: ERROR:  relation "ix_messaggi_id" already exists
+psql:backup_gole_neon_final.sql:2309: ERROR:  relation "ix_movimenti_contabili_id" already exists
+psql:backup_gole_neon_final.sql:2315: ERROR:  relation "ix_pagamenti_id" already exists
+psql:backup_gole_neon_final.sql:2321: ERROR:  relation "ix_partecipazioni_assemblea_id" already exists
+psql:backup_gole_neon_final.sql:2327: ERROR:  relation "ix_permessi_operatore_id" already exists
+psql:backup_gole_neon_final.sql:2333: ERROR:  relation "ix_presenze_id" already exists
+psql:backup_gole_neon_final.sql:2339: ERROR:  relation "ix_punti_ordine_giorno_id" already exists
+psql:backup_gole_neon_final.sql:2345: ERROR:  relation "ix_push_subscriptions_id" already exists
+psql:backup_gole_neon_final.sql:2351: ERROR:  relation "ix_ricevute_id" already exists
+psql:backup_gole_neon_final.sql:2357: ERROR:  relation "ix_richieste_iscrizione_id" already exists
+psql:backup_gole_neon_final.sql:2363: ERROR:  relation "ix_richieste_iscrizione_token" already exists
+psql:backup_gole_neon_final.sql:2369: ERROR:  relation "ix_staff_gruppo_id" already exists
+psql:backup_gole_neon_final.sql:2375: ERROR:  relation "ix_staff_id" already exists
+psql:backup_gole_neon_final.sql:2381: ERROR:  relation "ix_tariffe_id" already exists
+psql:backup_gole_neon_final.sql:2387: ERROR:  relation "ix_tesserati_id" already exists
+psql:backup_gole_neon_final.sql:2393: ERROR:  relation "ix_utenti_email" already exists
+psql:backup_gole_neon_final.sql:2399: ERROR:  relation "ix_utenti_id" already exists
+psql:backup_gole_neon_final.sql:2406: ERROR:  constraint "compensi_staff_id_fkey" for relation "compensi" already exists
+psql:backup_gole_neon_final.sql:2413: ERROR:  constraint "contratti_staff_id_fkey" for relation "contratti" already exists
+psql:backup_gole_neon_final.sql:2420: ERROR:  constraint "dati_richiesta_modulo_id_fkey" for relation "dati_richiesta" already exists
+psql:backup_gole_neon_final.sql:2427: ERROR:  constraint "documenti_tesserato_id_fkey" for relation "documenti" already exists
+psql:backup_gole_neon_final.sql:2434: ERROR:  constraint "eventi_gruppo_id_fkey" for relation "eventi" already exists
+psql:backup_gole_neon_final.sql:2441: ERROR:  constraint "eventi_ricorrente_id_fkey" for relation "eventi" already exists
+psql:backup_gole_neon_final.sql:2448: ERROR:  constraint "eventi_ricorrenti_gruppo_id_fkey" for relation "eventi_ricorrenti" already exists
+psql:backup_gole_neon_final.sql:2455: ERROR:  constraint "gruppo_tesserato_gruppo_id_fkey" for relation "gruppo_tesserato" already exists
+psql:backup_gole_neon_final.sql:2462: ERROR:  constraint "gruppo_tesserato_tesserato_id_fkey" for relation "gruppo_tesserato" already exists
+psql:backup_gole_neon_final.sql:2469: ERROR:  constraint "messaggi_destinatari_messaggio_id_fkey" for relation "messaggi_destinatari" already exists
+psql:backup_gole_neon_final.sql:2476: ERROR:  constraint "messaggi_destinatari_tesserato_id_fkey" for relation "messaggi_destinatari" already exists
+psql:backup_gole_neon_final.sql:2483: ERROR:  constraint "pagamenti_tariffa_id_fkey" for relation "pagamenti" already exists
+psql:backup_gole_neon_final.sql:2490: ERROR:  constraint "pagamenti_tesserato_id_fkey" for relation "pagamenti" already exists
+psql:backup_gole_neon_final.sql:2497: ERROR:  constraint "partecipazioni_assemblea_assemblea_id_fkey" for relation "partecipazioni_assemblea" already exists
+psql:backup_gole_neon_final.sql:2504: ERROR:  constraint "partecipazioni_assemblea_delega_a_id_fkey" for relation "partecipazioni_assemblea" already exists
+psql:backup_gole_neon_final.sql:2511: ERROR:  constraint "partecipazioni_assemblea_tesserato_id_fkey" for relation "partecipazioni_assemblea" already exists
+psql:backup_gole_neon_final.sql:2518: ERROR:  constraint "permessi_operatore_utente_id_fkey" for relation "permessi_operatore" already exists
+psql:backup_gole_neon_final.sql:2525: ERROR:  constraint "presenze_evento_id_fkey" for relation "presenze" already exists
+psql:backup_gole_neon_final.sql:2532: ERROR:  constraint "presenze_tesserato_id_fkey" for relation "presenze" already exists
+psql:backup_gole_neon_final.sql:2539: ERROR:  constraint "punti_ordine_giorno_assemblea_id_fkey" for relation "punti_ordine_giorno" already exists
+psql:backup_gole_neon_final.sql:2546: ERROR:  constraint "push_subscriptions_tesserato_id_fkey" for relation "push_subscriptions" already exists
+psql:backup_gole_neon_final.sql:2553: ERROR:  constraint "push_subscriptions_utente_id_fkey" for relation "push_subscriptions" already exists
+psql:backup_gole_neon_final.sql:2560: ERROR:  constraint "ricevute_pagamento_id_fkey" for relation "ricevute" already exists
+psql:backup_gole_neon_final.sql:2567: ERROR:  constraint "staff_gruppo_gruppo_id_fkey" for relation "staff_gruppo" already exists
+psql:backup_gole_neon_final.sql:2574: ERROR:  constraint "staff_gruppo_staff_id_fkey" for relation "staff_gruppo" already exists
+psql:backup_gole_neon_final.sql:2581: ERROR:  constraint "tesserati_genitore_id_fkey" for relation "tesserati" already exists
+psql:backup_gole_neon_final.sql:2588: ERROR:  constraint "tesserati_utente_id_fkey" for relation "tesserati" already exists

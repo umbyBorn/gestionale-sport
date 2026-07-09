@@ -159,13 +159,13 @@ def genera_pdf_ricevuta(
 
     # FIRMA
     firma_data = [
-        [Paragraph('Il Presidente', ParagraphStyle('firma_label', fontSize=9, textColor=HexColor("#6b7280"), fontName='Helvetica', alignment=TA_LEFT)), ''],
-        [Paragraph(f'<b>{PRESIDENTE}</b>', ParagraphStyle('firma_nome', fontSize=11, fontName='Helvetica-Bold', alignment=TA_LEFT)), ''],
-        [Paragraph('_________________________', ParagraphStyle('firma_linea', fontSize=11, alignment=TA_LEFT, textColor=HexColor("#9ca3af"))), ''],
+        [Paragraph('Il Presidente', ParagraphStyle('firma_label', fontSize=9, textColor=HexColor("#6b7280"), fontName='Helvetica', alignment=TA_RIGHT)), ''],
+        [Paragraph(f'<b>{PRESIDENTE}</b>', ParagraphStyle('firma_nome', fontSize=11, fontName='Helvetica-Bold', alignment=TA_RIGHT)), ''],
+        [Paragraph('_________________________', ParagraphStyle('firma_linea', fontSize=11, alignment=TA_RIGHT, textColor=HexColor("#9ca3af"))), ''],
     ]
     firma_table = Table(firma_data, colWidths=[8.5*cm, 8.5*cm])
     firma_table.setStyle(TableStyle([
-        ('ALIGN', (0,0), (0,-1), 'LEFT'),
+        ('ALIGN', (0,0), (-1,-1), 'RIGHT'),
         ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
     ]))
     elementi.append(firma_table)

@@ -96,6 +96,7 @@ def genera_pdf_ricevuta(
 
     # TITOLO RICEVUTA
     elementi.append(Paragraph(f"RICEVUTA DI PAGAMENTO N. {numero:04d}", stile_titolo))
+    elementi.append(Spacer(1, 0.5*cm))
     elementi.append(Paragraph(
         f"Data: {data_pagamento}",
         ParagraphStyle('data', fontSize=10, alignment=TA_CENTER, textColor=HexColor("#6b7280"), fontName='Helvetica')
@@ -108,6 +109,7 @@ def genera_pdf_ricevuta(
     indirizzo = tesserato.indirizzo or '—'
     comune = f"{tesserato.comune_residenza or ''} {tesserato.provincia_residenza or ''}".strip() or '—'
 
+    elementi.append(Spacer(1, 0.3*cm))  # spazio extra dopo città
     dati_box = [
         [Paragraph('<b>INTESTATARIO</b>', ParagraphStyle('label', fontSize=8, textColor=white, fontName='Helvetica-Bold')), ''],
         [Paragraph(f'<b>{nome_completo}</b>', ParagraphStyle('nome', fontSize=13, textColor=COLORE_PRIMARIO, fontName='Helvetica-Bold')), ''],
@@ -157,13 +159,13 @@ def genera_pdf_ricevuta(
 
     # FIRMA
     firma_data = [
-        [Paragraph('Il Presidente', ParagraphStyle('firma_label', fontSize=9, textColor=HexColor("#6b7280"), fontName='Helvetica', alignment=TA_CENTER)), ''],
-        [Paragraph(f'<b>{PRESIDENTE}</b>', ParagraphStyle('firma_nome', fontSize=11, fontName='Helvetica-Bold', alignment=TA_CENTER)), ''],
-        [Paragraph('_________________________', ParagraphStyle('firma_linea', fontSize=11, alignment=TA_CENTER, textColor=HexColor("#9ca3af"))), ''],
+        [Paragraph('Il Presidente', ParagraphStyle('firma_label', fontSize=9, textColor=HexColor("#6b7280"), fontName='Helvetica', alignment=TA_LEFT)), ''],
+        [Paragraph(f'<b>{PRESIDENTE}</b>', ParagraphStyle('firma_nome', fontSize=11, fontName='Helvetica-Bold', alignment=TA_LEFT)), ''],
+        [Paragraph('_________________________', ParagraphStyle('firma_linea', fontSize=11, alignment=TA_LEFT, textColor=HexColor("#9ca3af"))), ''],
     ]
     firma_table = Table(firma_data, colWidths=[8.5*cm, 8.5*cm])
     firma_table.setStyle(TableStyle([
-        ('ALIGN', (0,0), (-1,-1), 'CENTER'),
+        ('ALIGN', (0,0), (0,-1), 'LEFT'),
         ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
     ]))
     elementi.append(firma_table)

@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Date, Time, Boolean, ForeignKey, Enum, Text
+from sqlalchemy import Column, Integer, String, Date, Time, Boolean, ForeignKey, Enum, Text, UniqueConstraint
 from sqlalchemy.orm import relationship
 from app.database import Base
 import enum
@@ -57,3 +57,7 @@ class Presenza(Base):
 
     evento = relationship("Evento", back_populates="presenze")
     tesserato = relationship("Tesserato", back_populates="presenze")
+
+    __table_args__ = (
+        UniqueConstraint('evento_id', 'tesserato_id', name='uq_presenza_evento_tesserato'),
+    )

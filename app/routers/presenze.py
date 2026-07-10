@@ -56,8 +56,19 @@ def lista_presenze_tesserato(tesserato_id: int, db: Session = Depends(get_db)):
 
 @router.post("/presenze/", response_model=PresenzaRead)
 def registra_presenza(presenza: PresenzaCreate, db: Session = Depends(get_db)):
-    db_presenza = Presenza(**presenza.model_dump())
-    db.add(db_presenza)
+    """Upsert: se esiste già una presenza per questo (evento, tesserato) la aggiorna
+    invece di crearne una nuova. Evita i duplicati che rendevano la scelta
+    dell'utente non più modificabile."""
+    db_presenza = db.query(Presenza).filter(
+        Presenza.evento_id == presenza.evento_id,
+        Presenza.tesserato_id == presenza.tesserato_id,
+    ).first()
+    if db_presenza:
+        for key, value in presenza.model_dump().items():
+            setattr(db_presenza, key, value)
+    else:
+        db_presenza = Presenza(**presenza.model_dump())
+        db.add(db_presenza)
     db.commit()
     db.refresh(db_presenza)
     return db_presenza
@@ -72,3 +83,16 @@ def aggiorna_presenza(presenza_id: int, presenza: PresenzaCreate, db: Session = 
     db.commit()
     db.refresh(db_presenza)
     return db_presenza
+
+@router.delete("/eventi/{evento_id}/presenze/{tesserato_id}")
+def annulla_assenza(evento_id: int, tesserato_id: int, db: Session = Depends(get_db)):
+    """Rimuove il record di presenza: il tesserato torna allo stato di default (presente)."""
+    db_presenza = db.query(Presenza).filter(
+        Presenza.evento_id == evento_id,
+        Presenza.tesserato_id == tesserato_id,
+    ).first()
+    if not db_presenza:
+        raise HTTPException(status_code=404, detail="Presenza non trovata")
+    db.delete(db_presenza)
+    db.commit()
+    return {"messaggio": "Presenza rimossa, tesserato tornato presente di default"}

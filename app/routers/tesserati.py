@@ -278,37 +278,42 @@ def compagni_di_gruppo(tesserato_id: int, db: Session = Depends(get_db)):
 # ---- STATISTICHE PRESENZE TESSERATO ----
 @router.get("/{tesserato_id}/statistiche")
 def statistiche_tesserato(tesserato_id: int, db: Session = Depends(get_db)):
+    from datetime import date
     from app.models.presenze import Presenza, Evento
     from app.models.utenti import GruppoTesserato as GT
 
     # Tutti gli eventi dei gruppi del tesserato
     gruppi_ids = [gt.gruppo_id for gt in db.query(GT).filter(GT.tesserato_id == tesserato_id).all()]
-    
+
     if not gruppi_ids:
         return {"totale_eventi": 0, "presenze": 0, "assenze": 0, "percentuale": 0, "streak": 0}
 
-    eventi_gruppo = db.query(Evento).filter(Evento.gruppo_id.in_(gruppi_ids)).all()
+    # Regola: si è presenti "di default" a ogni evento già svolto del proprio
+    # gruppo, a meno che non risulti un'assenza registrata. Gli eventi futuri
+    # non vengono conteggiati (la presenza non è ancora stata rilevata).
+    oggi = date.today()
+    eventi_gruppo = db.query(Evento).filter(
+        Evento.gruppo_id.in_(gruppi_ids),
+        Evento.data <= oggi,
+    ).order_by(Evento.data.desc()).all()
     totale = len(eventi_gruppo)
     eventi_ids = [e.id for e in eventi_gruppo]
 
-    presenze = db.query(Presenza).filter(
+    assenze = db.query(Presenza).filter(
         Presenza.tesserato_id == tesserato_id,
-        Presenza.evento_id.in_(eventi_ids)
+        Presenza.evento_id.in_(eventi_ids),
+        Presenza.presente == False,
     ).all()
+    eventi_assente_ids = {a.evento_id for a in assenze}
 
-    n_presenti = sum(1 for p in presenze if p.presente)
-    n_assenti = sum(1 for p in presenze if not p.presente)
+    n_assenti = len(eventi_assente_ids)
+    n_presenti = totale - n_assenti
     percentuale = round(n_presenti / totale * 100) if totale > 0 else 0
 
-    # Calcola streak (presenze consecutive più recenti)
-    presenze_ordinate = sorted(
-        [p for p in presenze if p.presente],
-        key=lambda p: p.evento_id,
-        reverse=True
-    )
+    # Streak: eventi consecutivi più recenti senza assenza
     streak = 0
-    for p in presenze_ordinate:
-        if p.presente:
+    for e in eventi_gruppo:
+        if e.id not in eventi_assente_ids:
             streak += 1
         else:
             break
@@ -317,7 +322,6 @@ def statistiche_tesserato(tesserato_id: int, db: Session = Depends(get_db)):
         "totale_eventi": totale,
         "presenze": n_presenti,
         "assenze": n_assenti,
-        "non_registrate": totale - len(presenze),
         "percentuale": percentuale,
         "streak": streak,
     }

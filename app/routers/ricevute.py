@@ -177,7 +177,7 @@ def genera_pdf_ricevuta(
     elementi.append(linea2)
     elementi.append(Spacer(1, 0.3*cm))
     elementi.append(Paragraph(
-        f"Ricevuta generata il {datetime.now().strftime('%d/%m/%Y alle %H:%M')} dal sistema gestionale Golè · {NOME_ASSOCIAZIONE} · {CITTA_ASSOCIAZIONE}",
+        f"Ricevuta generata il {datetime.now().strftime('%d/%m/%Y alle %H:%M')} dal sistema gestionale PGS Juvenilia · {NOME_ASSOCIAZIONE} · {CITTA_ASSOCIAZIONE}",
         stile_piccolo
     ))
 
@@ -258,7 +258,7 @@ def invia_ricevuta_email(pagamento_id: int, db: Session = Depends(get_db), utent
     pdf_b64 = base64.b64encode(pdf.read()).decode()
 
     resend.Emails.send({
-        "from": "Golè Gestionale <onboarding@resend.dev>",
+        "from": "PGS Juvenilia - Gestionale <onboarding@resend.dev>",
         "to": [email_dest],
         "subject": f"Ricevuta di pagamento N. {pagamento_id:04d} - {NOME_ASSOCIAZIONE}",
         "text": f"Gentile {tesserato.nome} {tesserato.cognome},\n\nIn allegato trovi la ricevuta di pagamento N. {pagamento_id:04d} per € {pagamento.importo:.2f}.\n\nGrazie,\n{NOME_ASSOCIAZIONE}",

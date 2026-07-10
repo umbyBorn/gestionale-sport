@@ -99,6 +99,14 @@ async def importa_tesserati(file: UploadFile = File(...), db: Session = Depends(
             except ValueError:
                 pass
 
+            data_scadenza_certificato_medico = None
+            try:
+                cert = col(row, "certificato_medico_scadenza", "scadenza certificato medico")
+                if cert:
+                    data_scadenza_certificato_medico = parse_data(cert)
+            except ValueError:
+                pass
+
             tesserato = Tesserato(
                 nome=nome,
                 cognome=cognome,
@@ -123,6 +131,7 @@ async def importa_tesserati(file: UploadFile = File(...), db: Session = Depends(
                 sport=col(row, "sport"),
                 data_emissione_tessera=data_emissione,
                 data_scadenza_tessera=data_scadenza_tessera,
+                data_scadenza_certificato_medico=data_scadenza_certificato_medico,
                 matricola=col(row, "matricola"),
                 disabile=parse_bool(row.get("disabile", "")),
                 straniero=parse_bool(row.get("straniero", "")),

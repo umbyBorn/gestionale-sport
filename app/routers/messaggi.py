@@ -28,7 +28,7 @@ def invia_email(destinatario: str, intestazione: str, corpo: str):
     try:
         resend.api_key = api_key
         resend.Emails.send({
-            "from": "Golè Gestionale <onboarding@resend.dev>",
+            "from": "PGS Juvenilia - Gestionale <onboarding@resend.dev>",
             "to": [destinatario],
             "subject": intestazione,
             "text": corpo,
@@ -149,7 +149,7 @@ def invia_messaggio(dati: MessaggioCreate, db: Session = Depends(get_db)):
 @router.get("/test-email")
 def test_email(destinatario: str, db: Session = Depends(get_db)):
     api_key = os.getenv("RESEND_API_KEY")
-    ok = invia_email(destinatario, "Test Golè", "Email di test dal sistema Golè tramite Resend")
+    ok = invia_email(destinatario, "Test PGS Juvenilia", "Email di test dal sistema PGS Juvenilia tramite Resend")
     return {
         "resend_api_key_presente": bool(api_key),
         "destinatario": destinatario,

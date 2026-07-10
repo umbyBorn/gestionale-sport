@@ -44,3 +44,18 @@ class CompensoRead(CompensoCreate):
 
     class Config:
         from_attributes = True
+
+class ContrattoCreate(BaseModel):
+    staff_id: int
+    tipo: TipoContrattoEnum
+    data_inizio: date
+    data_fine: Optional[date] = None
+    importo: float
+    firmato: bool = False
+
+class ContrattoRead(ContrattoCreate):
+    id: int
+    path_pdf: Optional[str] = None
+
+    class Config:
+        from_attributes = True

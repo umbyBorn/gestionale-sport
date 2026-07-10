@@ -80,7 +80,7 @@ def test_send(subscription_id: int, db: Session = Depends(get_db)):
         mailto = os.getenv("VAPID_MAILTO", "mailto:admin@example.com")
         webpush(
             subscription_info={"endpoint": sub.endpoint, "keys": {"p256dh": sub.p256dh, "auth": sub.auth}},
-            data=json.dumps({"title": "Test Golè", "body": "Test push"}),
+            data=json.dumps({"title": "Test PGS Juvenilia", "body": "Test push"}),
             vapid_private_key=private_key,
             vapid_claims={"sub": mailto}
         )

@@ -1,7 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
+from sqlalchemy import func
 from app.database import SessionLocal
-from app.models.utenti import Gruppo
+from app.models.utenti import Gruppo, GruppoTesserato
 from app.schemas.gruppi import GruppoCreate, GruppoRead
 from typing import List
 
@@ -14,15 +15,27 @@ def get_db():
     finally:
         db.close()
 
+def _con_conteggio(gruppi: List[Gruppo], db: Session) -> List[Gruppo]:
+    conteggi = dict(
+        db.query(GruppoTesserato.gruppo_id, func.count(GruppoTesserato.id))
+        .group_by(GruppoTesserato.gruppo_id)
+        .all()
+    )
+    for g in gruppi:
+        g.num_tesserati = conteggi.get(g.id, 0)
+    return gruppi
+
 @router.get("/", response_model=List[GruppoRead])
 def lista_gruppi(db: Session = Depends(get_db)):
-    return db.query(Gruppo).filter(Gruppo.attivo == True).all()
+    gruppi = db.query(Gruppo).filter(Gruppo.attivo == True).all()
+    return _con_conteggio(gruppi, db)
 
 @router.get("/{gruppo_id}", response_model=GruppoRead)
 def get_gruppo(gruppo_id: int, db: Session = Depends(get_db)):
     gruppo = db.query(Gruppo).filter(Gruppo.id == gruppo_id).first()
     if not gruppo:
         raise HTTPException(status_code=404, detail="Gruppo non trovato")
+    _con_conteggio([gruppo], db)
     return gruppo
 
 @router.post("/", response_model=GruppoRead)

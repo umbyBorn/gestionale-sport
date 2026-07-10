@@ -32,9 +32,13 @@ class Pagamento(Base):
     metodo = Column(Enum(MetodoPagamentoEnum), nullable=True)
     pagato = Column(Boolean, default=False)
     contabile_allegata = Column(String, nullable=True)
+    descrizione = Column(String, nullable=True)
+    evento_id = Column(Integer, ForeignKey("eventi.id"), nullable=True)
+    gruppo_generazione_id = Column(String, nullable=True, index=True)
     tesserato = relationship("Tesserato", back_populates="pagamenti")
     tariffa = relationship("Tariffa", back_populates="pagamenti")
     ricevuta = relationship("Ricevuta", back_populates="pagamento", uselist=False)
+    evento = relationship("Evento")
 
 class Ricevuta(Base):
     __tablename__ = "ricevute"
@@ -59,3 +63,6 @@ class MovimentoContabile(Base):
     intestatario = Column(String, nullable=True)
     allegato = Column(String, nullable=True)
     note = Column(Text, nullable=True)
+    pagamento_id = Column(Integer, ForeignKey("pagamenti.id"), nullable=True)
+
+    pagamento = relationship("Pagamento")

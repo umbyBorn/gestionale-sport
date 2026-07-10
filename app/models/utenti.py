@@ -73,6 +73,9 @@ class Tesserato(Base):
     data_scadenza_tessera = Column(Date, nullable=True)
     matricola = Column(String, nullable=True)
 
+    # Certificato medico sportivo
+    data_scadenza_certificato_medico = Column(Date, nullable=True)
+
     # Info aggiuntive
     disabile = Column(Boolean, default=False)
     straniero = Column(Boolean, default=False)

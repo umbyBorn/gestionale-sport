@@ -47,13 +47,44 @@ def _avvia_server():
     import uvicorn
     from app.main import app as fastapi_app
     from fastapi.staticfiles import StaticFiles
+    from fastapi.responses import FileResponse
     from local_app.router_locale import router as router_locale
 
     fastapi_app.include_router(router_locale)
 
     cartella_build = _percorso_risorsa(os.path.join("frontend_build"))
     if os.path.isdir(cartella_build):
-        fastapi_app.mount("/", StaticFiles(directory=cartella_build, html=True), name="frontend")
+        # app/main.py definisce una route esplicita GET "/" (health-check usata
+        # su Render): la rimuovo solo qui, altrimenti avrebbe sempre la
+        # precedenza sull'interfaccia servita in locale.
+        fastapi_app.router.routes = [
+            r for r in fastapi_app.router.routes
+            if not (getattr(r, "path", None) == "/" and "GET" in getattr(r, "methods", set()))
+        ]
+
+        # I file JS/CSS della build (cartella build/static/) su un sotto-percorso
+        # dedicato: NON monto nulla su "/", altrimenti intercetterebbe anche le
+        # chiamate API (es. /auth/login) prima che arrivino ai router veri.
+        cartella_static_build = os.path.join(cartella_build, "static")
+        if os.path.isdir(cartella_static_build):
+            fastapi_app.mount("/static", StaticFiles(directory=cartella_static_build), name="static_build")
+
+        percorso_index = os.path.join(cartella_build, "index.html")
+
+        # Route "raccogli-tutto", registrata per ULTIMA (dopo tutti gli
+        # include_router già fatti in app/main.py): Starlette controlla prima
+        # le route specifiche (API), quindi questa scatta solo se nessuna
+        # route API corrisponde. Serve i file reali della build (favicon,
+        # manifest.json...) se esistono, altrimenti index.html — così anche
+        # il routing lato client di React funziona su un refresh diretto.
+        @fastapi_app.get("/{percorso_completo:path}", include_in_schema=False)
+        def servi_frontend(percorso_completo: str):
+            candidato = os.path.join(cartella_build, percorso_completo)
+            if percorso_completo and os.path.isfile(candidato):
+                return FileResponse(candidato)
+            return FileResponse(percorso_index)
+    else:
+        print(f"ATTENZIONE: cartella frontend non trovata in {cartella_build}, servo solo l'API")
 
     uvicorn.run(fastapi_app, host="127.0.0.1", port=PORTA_LOCALE, log_level="warning")
 

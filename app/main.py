@@ -1,10 +1,16 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+import os
 from app.routers import tesserati, gruppi, pagamenti, staff, presenze, assemblee
 from app.routers import auth, calendario, importazione, messaggi, admin, push, iscrizioni, ricevute
-from app.routers import prima_nota
+from app.routers import prima_nota, sync
 from alembic.config import Config
 from alembic import command
+
+# Importa tutti i modelli e registra i listener che tengono aggiornato
+# automaticamente sync_log ad ogni insert/update/delete (funzionamento offline)
+import app.models  # noqa: F401
+import app.sync.listeners  # noqa: F401
 
 app = FastAPI(
     title="Gestionale Sportivo",
@@ -22,6 +28,12 @@ app.add_middleware(
 
 @app.on_event("startup")
 def esegui_migrazioni():
+    if os.getenv("APP_MODE") == "locale":
+        # Modalità locale/offline: lo schema SQLite viene creato direttamente
+        # dai modelli correnti (vedi local_app/avvia_locale.py), non tramite
+        # la catena di migration Alembic che è scritta per Postgres/Neon.
+        print("Modalità locale: migrazioni Alembic saltate")
+        return
     try:
         alembic_cfg = Config("alembic.ini")
         command.upgrade(alembic_cfg, "head")
@@ -45,6 +57,7 @@ app.include_router(iscrizioni.router)
 app.include_router(ricevute.router)
 app.include_router(prima_nota.router)
 app.include_router(prima_nota.rendiconto_router)
+app.include_router(sync.router)
 
 @app.get("/")
 def root():

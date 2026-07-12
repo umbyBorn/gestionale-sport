@@ -21,9 +21,20 @@ class EventoCreate(BaseModel):
 
 class EventoRead(EventoCreate):
     id: int
+    ricorrente_id: Optional[int] = None
 
     class Config:
         from_attributes = True
+
+class EventoUpdate(BaseModel):
+    gruppo_id: Optional[int] = None
+    tipo: Optional[TipoEventoEnum] = None
+    titolo: Optional[str] = None
+    data: Optional[date] = None
+    ora_inizio: Optional[time] = None
+    ora_fine: Optional[time] = None
+    luogo: Optional[str] = None
+    note: Optional[str] = None
 
 class PresenzaCreate(BaseModel):
     evento_id: int

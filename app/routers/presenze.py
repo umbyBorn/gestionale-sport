@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from app.database import SessionLocal
 from app.models.presenze import Evento, Presenza
-from app.schemas.presenze import EventoCreate, EventoRead, PresenzaCreate, PresenzaRead
+from app.schemas.presenze import EventoCreate, EventoRead, EventoUpdate, PresenzaCreate, PresenzaRead
 from typing import List
 
 router = APIRouter(tags=["Presenze"])
@@ -31,6 +31,19 @@ def get_evento(evento_id: int, db: Session = Depends(get_db)):
 def crea_evento(evento: EventoCreate, db: Session = Depends(get_db)):
     db_evento = Evento(**evento.model_dump())
     db.add(db_evento)
+    db.commit()
+    db.refresh(db_evento)
+    return db_evento
+
+@router.put("/eventi/{evento_id}", response_model=EventoRead)
+def modifica_evento(evento_id: int, dati: EventoUpdate, db: Session = Depends(get_db)):
+    """Modifica i campi di un singolo evento (occorrenza). Non tocca le altre occorrenze
+    della stessa serie ricorrente, anche se l'evento ne fa parte."""
+    db_evento = db.query(Evento).filter(Evento.id == evento_id).first()
+    if not db_evento:
+        raise HTTPException(status_code=404, detail="Evento non trovato")
+    for key, value in dati.model_dump(exclude_unset=True).items():
+        setattr(db_evento, key, value)
     db.commit()
     db.refresh(db_evento)
     return db_evento

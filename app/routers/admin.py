@@ -102,6 +102,64 @@ def aggiorna_permesso(
     return {"ok": True}
 
 
+class ModificaUtenteInput(BaseModel):
+    email: Optional[str] = None
+    ruolo: Optional[RuoloEnum] = None
+    tesserato_id: Optional[int] = None
+
+
+@router.put("/utenti/{utente_id}")
+def modifica_utente(
+    utente_id: int,
+    dati: ModificaUtenteInput,
+    db: Session = Depends(get_db),
+    _=Depends(solo_admin),
+):
+    utente = db.query(Utente).filter(Utente.id == utente_id).first()
+    if not utente:
+        raise HTTPException(status_code=404, detail="Utente non trovato")
+    if dati.email and dati.email != utente.email:
+        esistente = db.query(Utente).filter(Utente.email == dati.email, Utente.id != utente_id).first()
+        if esistente:
+            raise HTTPException(status_code=400, detail="Email già registrata da un altro utente")
+        utente.email = dati.email
+    if dati.ruolo:
+        utente.ruolo = dati.ruolo
+    if dati.tesserato_id is not None:
+        # scollega il tesserato precedentemente associato a questo utente
+        vecchio = db.query(Tesserato).filter(Tesserato.utente_id == utente_id).first()
+        if vecchio:
+            vecchio.utente_id = None
+        if dati.tesserato_id:
+            nuovo = db.query(Tesserato).filter(Tesserato.id == dati.tesserato_id).first()
+            if nuovo:
+                nuovo.utente_id = utente_id
+    db.commit()
+    db.refresh(utente)
+    return {"id": utente.id, "email": utente.email, "ruolo": utente.ruolo.value}
+
+
+@router.delete("/utenti/{utente_id}")
+def elimina_utente(
+    utente_id: int,
+    db: Session = Depends(get_db),
+    richiedente: Utente = Depends(solo_admin),
+):
+    if utente_id == richiedente.id:
+        raise HTTPException(status_code=400, detail="Non puoi eliminare il tuo stesso account mentre sei collegato")
+    utente = db.query(Utente).filter(Utente.id == utente_id).first()
+    if not utente:
+        raise HTTPException(status_code=404, detail="Utente non trovato")
+    # scollega eventuale tesserato associato (non lo elimina, solo rimuove il collegamento)
+    tesserato = db.query(Tesserato).filter(Tesserato.utente_id == utente_id).first()
+    if tesserato:
+        tesserato.utente_id = None
+    db.query(PermessoOperatore).filter(PermessoOperatore.utente_id == utente_id).delete()
+    db.delete(utente)
+    db.commit()
+    return {"messaggio": "Utente eliminato definitivamente"}
+
+
 @router.put("/utenti/{utente_id}/attivo")
 def toggle_utente(utente_id: int, attivo: bool, db: Session = Depends(get_db), _=Depends(solo_admin)):
     utente = db.query(Utente).filter(Utente.id == utente_id).first()

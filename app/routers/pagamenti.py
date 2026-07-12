@@ -10,8 +10,9 @@ from app.schemas.pagamenti import (
     PianoScadenzeCreate, PianoScadenzeResult,
     PagamentoGruppoCreate, PagamentoGruppoResult,
 )
-from typing import List
+from typing import List, Optional
 from datetime import date
+from pydantic import BaseModel
 
 router = APIRouter(tags=["Pagamenti"])
 
@@ -66,6 +67,17 @@ def pagamenti_tesserato(tesserato_id: int, db: Session = Depends(get_db)):
     return db.query(Pagamento).filter(
         Pagamento.tesserato_id == tesserato_id
     ).order_by(Pagamento.data_scadenza).all()
+
+
+@router.delete("/pagamenti/tesserato/{tesserato_id}/non-pagati")
+def elimina_pagamenti_non_pagati_tesserato(tesserato_id: int, db: Session = Depends(get_db)):
+    """Rimuove in blocco tutti i pagamenti non ancora pagati di un tesserato (es. creati per errore)."""
+    eliminati = db.query(Pagamento).filter(
+        Pagamento.tesserato_id == tesserato_id,
+        Pagamento.pagato == False,
+    ).delete(synchronize_session=False)
+    db.commit()
+    return {"eliminati": eliminati}
 
 
 @router.post("/pagamenti/", response_model=PagamentoRead)
@@ -196,6 +208,27 @@ def crea_pagamento_gruppo(dati: PagamentoGruppoCreate, db: Session = Depends(get
 def pagamenti_del_batch(gruppo_generazione_id: str, db: Session = Depends(get_db)):
     """Utile per modificare/annullare in blocco una generazione (es. tutte le rate di un piano)."""
     return db.query(Pagamento).filter(Pagamento.gruppo_generazione_id == gruppo_generazione_id).all()
+
+
+class ModificaBatchInput(BaseModel):
+    importo: Optional[float] = None
+    data_scadenza: Optional[date] = None
+    solo_non_pagati: bool = True
+
+@router.put("/pagamenti/batch/{gruppo_generazione_id}")
+def modifica_batch(gruppo_generazione_id: str, dati: ModificaBatchInput, db: Session = Depends(get_db)):
+    """Applica una modifica (importo e/o data scadenza) a tutti i pagamenti di una generazione in blocco."""
+    q = db.query(Pagamento).filter(Pagamento.gruppo_generazione_id == gruppo_generazione_id)
+    if dati.solo_non_pagati:
+        q = q.filter(Pagamento.pagato == False)
+    pagamenti = q.all()
+    for p in pagamenti:
+        if dati.importo is not None:
+            p.importo = dati.importo
+        if dati.data_scadenza is not None:
+            p.data_scadenza = dati.data_scadenza
+    db.commit()
+    return {"modificati": len(pagamenti)}
 
 
 @router.delete("/pagamenti/batch/{gruppo_generazione_id}")

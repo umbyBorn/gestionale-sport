@@ -116,6 +116,55 @@ def crea_evento_ricorrente(evento: EventoRicorrenteCreate, db: Session = Depends
     db.commit()
     return {"messaggio": f"Evento ricorrente creato con {occorrenze_create} occorrenze"}
 
+class EventoRicorrenteUpdate(BaseModel):
+    titolo: Optional[str] = None
+    ora_inizio: Optional[str] = None
+    ora_fine: Optional[str] = None
+    luogo: Optional[str] = None
+    solo_futuri: bool = True
+
+@router.put("/eventi-ricorrenti/{ricorrente_id}")
+def modifica_evento_ricorrente(ricorrente_id: int, dati: EventoRicorrenteUpdate, db: Session = Depends(get_db)):
+    """Applica le modifiche a tutte le occorrenze (future, o anche passate se solo_futuri=False)."""
+    ricorrente = db.query(EventoRicorrente).filter(EventoRicorrente.id == ricorrente_id).first()
+    if not ricorrente:
+        raise HTTPException(status_code=404, detail="Evento ricorrente non trovato")
+
+    ora_inizio = None
+    ora_fine = None
+    if dati.ora_inizio:
+        parts = dati.ora_inizio.split(":")
+        ora_inizio = time(int(parts[0]), int(parts[1]))
+    if dati.ora_fine:
+        parts = dati.ora_fine.split(":")
+        ora_fine = time(int(parts[0]), int(parts[1]))
+
+    if dati.titolo:
+        ricorrente.titolo = dati.titolo
+    if dati.ora_inizio:
+        ricorrente.ora_inizio = ora_inizio
+    if dati.ora_fine:
+        ricorrente.ora_fine = ora_fine
+    if dati.luogo is not None:
+        ricorrente.luogo = dati.luogo
+
+    q = db.query(Evento).filter(Evento.ricorrente_id == ricorrente_id)
+    if dati.solo_futuri:
+        q = q.filter(Evento.data >= date.today())
+    occorrenze = q.all()
+    for e in occorrenze:
+        if dati.titolo:
+            e.titolo = dati.titolo
+        if dati.ora_inizio:
+            e.ora_inizio = ora_inizio
+        if dati.ora_fine:
+            e.ora_fine = ora_fine
+        if dati.luogo is not None:
+            e.luogo = dati.luogo
+
+    db.commit()
+    return {"messaggio": f"Aggiornate {len(occorrenze)} occorrenze"}
+
 @router.delete("/eventi-ricorrenti/{ricorrente_id}")
 def elimina_evento_ricorrente(ricorrente_id: int, elimina_futuri: bool = True, db: Session = Depends(get_db)):
     ricorrente = db.query(EventoRicorrente).filter(EventoRicorrente.id == ricorrente_id).first()

@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from app.database import SessionLocal
 from app.models.presenze import Evento, Presenza
+from app.models.contabilita import Pagamento
 from app.schemas.presenze import EventoCreate, EventoRead, EventoUpdate, PresenzaCreate, PresenzaRead
 from typing import List
 
@@ -53,8 +54,16 @@ def elimina_evento(evento_id: int, db: Session = Depends(get_db)):
     db_evento = db.query(Evento).filter(Evento.id == evento_id).first()
     if not db_evento:
         raise HTTPException(status_code=404, detail="Evento non trovato")
+    db.query(Presenza).filter(Presenza.evento_id == evento_id).delete(synchronize_session=False)
+    db.query(Pagamento).filter(Pagamento.evento_id == evento_id).update(
+        {Pagamento.evento_id: None}, synchronize_session=False
+    )
     db.delete(db_evento)
-    db.commit()
+    try:
+        db.commit()
+    except Exception as exc:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Impossibile eliminare l'evento: {str(exc)}")
     return {"messaggio": "Evento eliminato"}
 
 # ---- PRESENZE ----

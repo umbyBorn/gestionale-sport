@@ -1,7 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from app.database import SessionLocal
-from app.models.presenze import Evento, EventoRicorrente, TipoEventoEnum
+from app.models.presenze import Evento, EventoRicorrente, TipoEventoEnum, Presenza
+from app.models.contabilita import Pagamento
 from pydantic import BaseModel
 from typing import List, Optional
 from datetime import date, time, timedelta
@@ -165,12 +166,24 @@ def modifica_evento_ricorrente(ricorrente_id: int, dati: EventoRicorrenteUpdate,
     db.commit()
     return {"messaggio": f"Aggiornate {len(occorrenze)} occorrenze"}
 
+def _elimina_evento_sicuro(db: Session, evento: Evento):
+    """Elimina un evento gestendo le dipendenze: rimuove le presenze collegate
+    e scollega (senza eliminarli) gli eventuali pagamenti che lo referenziano,
+    evitando l'errore di integrità referenziale che bloccava la cancellazione."""
+    db.query(Presenza).filter(Presenza.evento_id == evento.id).delete(synchronize_session=False)
+    db.query(Pagamento).filter(Pagamento.evento_id == evento.id).update(
+        {Pagamento.evento_id: None}, synchronize_session=False
+    )
+    db.delete(evento)
+
+
 @router.delete("/eventi-ricorrenti/{ricorrente_id}")
 def elimina_evento_ricorrente(ricorrente_id: int, elimina_futuri: bool = True, db: Session = Depends(get_db)):
     ricorrente = db.query(EventoRicorrente).filter(EventoRicorrente.id == ricorrente_id).first()
     if not ricorrente:
         raise HTTPException(status_code=404, detail="Evento ricorrente non trovato")
     ricorrente.attivo = False
+    eliminati = 0
     if elimina_futuri:
         oggi = date.today()
         eventi_futuri = db.query(Evento).filter(
@@ -178,17 +191,26 @@ def elimina_evento_ricorrente(ricorrente_id: int, elimina_futuri: bool = True, d
             Evento.data >= oggi
         ).all()
         for e in eventi_futuri:
-            db.delete(e)
-    db.commit()
-    return {"messaggio": "Evento ricorrente disattivato"}
+            _elimina_evento_sicuro(db, e)
+            eliminati += 1
+    try:
+        db.commit()
+    except Exception as exc:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Impossibile eliminare la serie: {str(exc)}")
+    return {"messaggio": "Evento ricorrente disattivato", "occorrenze_eliminate": eliminati}
 
 @router.delete("/eventi/{evento_id}/occorrenza")
 def elimina_occorrenza(evento_id: int, db: Session = Depends(get_db)):
     evento = db.query(Evento).filter(Evento.id == evento_id).first()
     if not evento:
         raise HTTPException(status_code=404, detail="Evento non trovato")
-    db.delete(evento)
-    db.commit()
+    _elimina_evento_sicuro(db, evento)
+    try:
+        db.commit()
+    except Exception as exc:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Impossibile eliminare l'evento: {str(exc)}")
     return {"messaggio": "Occorrenza eliminata"}
 
 @router.get("/calendario/")

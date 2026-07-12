@@ -52,7 +52,20 @@ def tesserati_del_gruppo(gruppo_id: int, db: Session = Depends(get_db)):
         .filter(GruppoTesserato.gruppo_id == gruppo_id, Tesserato.attivo == True)
         .all()
     )
-    return [{"id": t.id, "nome": t.nome, "cognome": t.cognome} for t in tesserati]
+    return [
+        {
+            "id": t.id,
+            "nome": t.nome,
+            "cognome": t.cognome,
+            "data_nascita": t.data_nascita,
+            "categoria": t.categoria,
+            "email": t.email,
+            "telefono": t.telefono,
+            "cellulare": t.cellulare,
+            "foto_url": t.foto_url,
+        }
+        for t in tesserati
+    ]
 
 
 @router.post("/invia", response_model=MessaggioRead)

@@ -4,6 +4,8 @@ from datetime import date
 from app.database import SessionLocal
 from app.models.utenti import Tesserato
 from app.schemas.tesserati import TesseratoCreate, TesseratoRead
+from app.auth import richiedi_ruolo
+from pydantic import BaseModel
 from typing import List, Optional
 
 router = APIRouter(prefix="/tesserati", tags=["Tesserati"])
@@ -82,11 +84,8 @@ def elimina_tesserato(tesserato_id: int, db: Session = Depends(get_db)):
     db.commit()
     return {"messaggio": "Tesserato disattivato"}
 
-@router.delete("/{tesserato_id}/definitivo")
-def elimina_tesserato_definitivo(tesserato_id: int, db: Session = Depends(get_db)):
-    db_tesserato = db.query(Tesserato).filter(Tesserato.id == tesserato_id).first()
-    if not db_tesserato:
-        raise HTTPException(status_code=404, detail="Tesserato non trovato")
+def _pulisci_dipendenze_tesserato(db: Session, tesserato_id: int):
+    """Rimuove tutti i dati collegati a un tesserato prima dell'eliminazione definitiva."""
     from app.models.utenti import Documento, GruppoTesserato
     from app.models.contabilita import Pagamento
     from app.models.presenze import Presenza
@@ -96,9 +95,43 @@ def elimina_tesserato_definitivo(tesserato_id: int, db: Session = Depends(get_db
     db.query(Pagamento).filter(Pagamento.tesserato_id == tesserato_id).delete()
     db.query(Presenza).filter(Presenza.tesserato_id == tesserato_id).delete()
     db.query(MessaggioDestinatario).filter(MessaggioDestinatario.tesserato_id == tesserato_id).delete()
+
+@router.delete("/{tesserato_id}/definitivo")
+def elimina_tesserato_definitivo(tesserato_id: int, db: Session = Depends(get_db)):
+    db_tesserato = db.query(Tesserato).filter(Tesserato.id == tesserato_id).first()
+    if not db_tesserato:
+        raise HTTPException(status_code=404, detail="Tesserato non trovato")
+    _pulisci_dipendenze_tesserato(db, tesserato_id)
     db.delete(db_tesserato)
     db.commit()
     return {"messaggio": "Tesserato eliminato definitivamente"}
+
+
+class EliminaBulkInput(BaseModel):
+    tesserato_ids: List[int]
+
+@router.post("/elimina-in-blocco")
+def elimina_tesserati_in_blocco(
+    dati: EliminaBulkInput,
+    db: Session = Depends(get_db),
+    _admin=Depends(richiedi_ruolo("amministratore")),
+):
+    """Elimina DEFINITIVAMENTE un insieme di tesserati (es. quelli attualmente filtrati/visualizzati).
+    Riservato agli amministratori."""
+    if not dati.tesserato_ids:
+        raise HTTPException(status_code=400, detail="Nessun tesserato specificato")
+    eliminati = 0
+    non_trovati = 0
+    for tid in dati.tesserato_ids:
+        db_tesserato = db.query(Tesserato).filter(Tesserato.id == tid).first()
+        if not db_tesserato:
+            non_trovati += 1
+            continue
+        _pulisci_dipendenze_tesserato(db, tid)
+        db.delete(db_tesserato)
+        eliminati += 1
+    db.commit()
+    return {"eliminati": eliminati, "non_trovati": non_trovati}
 from app.models.utenti import GruppoTesserato, Gruppo
 from datetime import date
 

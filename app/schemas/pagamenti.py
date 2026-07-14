@@ -133,3 +133,19 @@ class RendicontoResponse(BaseModel):
     saldo: float
     per_categoria: List[RendicontoRigaCategoria]
     per_mese: List[RendicontoRigaMensile]
+
+
+# ---- RICEVUTE EROGAZIONE LIBERALE ----
+
+class RicevutaDonazioneCreate(BaseModel):
+    nome_donatore: str
+    importo: float
+    data: date
+    causale: Optional[str] = None
+
+class RicevutaDonazioneRead(RicevutaDonazioneCreate):
+    id: int
+    creato_il: date
+
+    class Config:
+        from_attributes = True

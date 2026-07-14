@@ -66,3 +66,14 @@ class MovimentoContabile(Base):
     pagamento_id = Column(Integer, ForeignKey("pagamenti.id"), nullable=True)
 
     pagamento = relationship("Pagamento")
+
+
+class RicevutaDonazione(Base):
+    """Registro delle ricevute per erogazioni liberali (donazioni) emesse dall'associazione."""
+    __tablename__ = "ricevute_donazione"
+    id = Column(Integer, primary_key=True, index=True)
+    nome_donatore = Column(String, nullable=False)
+    importo = Column(Numeric(10, 2), nullable=False)
+    data = Column(Date, nullable=False)
+    causale = Column(String, nullable=True)
+    creato_il = Column(Date, nullable=False)

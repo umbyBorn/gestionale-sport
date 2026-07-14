@@ -65,3 +65,35 @@ def elimina_gruppo(gruppo_id: int, db: Session = Depends(get_db)):
     db_gruppo.attivo = False
     db.commit()
     return {"messaggio": "Gruppo disattivato"}
+
+
+@router.get("/{gruppo_id}/tesserati-ids")
+def tesserati_ids_del_gruppo(gruppo_id: int, db: Session = Depends(get_db)):
+    """Restituisce solo gli id dei tesserati già nel gruppo, utile per la selezione da lista completa."""
+    righe = db.query(GruppoTesserato.tesserato_id).filter(GruppoTesserato.gruppo_id == gruppo_id).all()
+    return [r[0] for r in righe]
+
+
+@router.post("/{gruppo_id}/tesserati/{tesserato_id}")
+def aggiungi_tesserato_a_gruppo(gruppo_id: int, tesserato_id: int, db: Session = Depends(get_db)):
+    esiste = db.query(GruppoTesserato).filter(
+        GruppoTesserato.gruppo_id == gruppo_id, GruppoTesserato.tesserato_id == tesserato_id
+    ).first()
+    if esiste:
+        return {"messaggio": "Il tesserato è già in questo gruppo"}
+    from datetime import date
+    db.add(GruppoTesserato(gruppo_id=gruppo_id, tesserato_id=tesserato_id, data_iscrizione=date.today()))
+    db.commit()
+    return {"messaggio": "Tesserato aggiunto al gruppo"}
+
+
+@router.delete("/{gruppo_id}/tesserati/{tesserato_id}")
+def rimuovi_tesserato_da_gruppo(gruppo_id: int, tesserato_id: int, db: Session = Depends(get_db)):
+    riga = db.query(GruppoTesserato).filter(
+        GruppoTesserato.gruppo_id == gruppo_id, GruppoTesserato.tesserato_id == tesserato_id
+    ).first()
+    if not riga:
+        raise HTTPException(status_code=404, detail="Il tesserato non è in questo gruppo")
+    db.delete(riga)
+    db.commit()
+    return {"messaggio": "Tesserato rimosso dal gruppo"}

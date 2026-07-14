@@ -142,3 +142,66 @@ def rendiconto(
         per_categoria=per_categoria,
         per_mese=per_mese,
     )
+
+
+@router.get("/export/excel")
+def esporta_prima_nota_excel(
+    data_da: Optional[date] = None,
+    data_a: Optional[date] = None,
+    db: Session = Depends(get_db),
+):
+    """Esporta i movimenti di Prima Nota in Excel nello stesso formato tradizionale
+    usato finora dall'associazione: Data, Descrizione, Entrata, Uscita, Saldo (progressivo)."""
+    from fastapi.responses import StreamingResponse
+    from openpyxl import Workbook
+    from openpyxl.styles import Font, PatternFill, Alignment
+    from openpyxl.utils import get_column_letter
+    import io as _io
+
+    q = db.query(MovimentoContabile).order_by(MovimentoContabile.data, MovimentoContabile.id)
+    if data_da:
+        q = q.filter(MovimentoContabile.data >= data_da)
+    if data_a:
+        q = q.filter(MovimentoContabile.data <= data_a)
+    movimenti = q.all()
+
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Cassa"
+
+    ws.merge_cells('A1:E1')
+    ws['A1'] = "Cassa"
+    ws['A1'].font = Font(bold=True, size=12)
+    ws['A1'].alignment = Alignment(horizontal='center')
+
+    intestazioni = ['Data', 'Descrizione', 'Entrata', 'Uscita', 'Saldo']
+    for col, testo in enumerate(intestazioni, start=1):
+        cell = ws.cell(row=2, column=col, value=testo)
+        cell.font = Font(bold=True, color="FFFFFF")
+        cell.fill = PatternFill("solid", start_color="1E3A8A")
+        cell.alignment = Alignment(horizontal='center')
+
+    saldo = 0.0
+    for i, m in enumerate(movimenti, start=3):
+        tipo_val = getattr(m.tipo, "value", m.tipo)
+        entrata = float(m.importo) if tipo_val == "entrata" else None
+        uscita = float(m.importo) if tipo_val == "uscita" else None
+        saldo += (entrata or 0) - (uscita or 0)
+        ws.cell(row=i, column=1, value=m.data.strftime('%d/%m/%Y'))
+        ws.cell(row=i, column=2, value=m.descrizione)
+        ws.cell(row=i, column=3, value=entrata)
+        ws.cell(row=i, column=4, value=uscita)
+        ws.cell(row=i, column=5, value=round(saldo, 2))
+
+    for col, larghezza in zip(range(1, 6), [14, 45, 14, 14, 14]):
+        ws.column_dimensions[get_column_letter(col)].width = larghezza
+    ws.freeze_panes = "A3"
+
+    buffer = _io.BytesIO()
+    wb.save(buffer)
+    buffer.seek(0)
+    return StreamingResponse(
+        buffer,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": "attachment; filename=prima_nota.xlsx"}
+    )

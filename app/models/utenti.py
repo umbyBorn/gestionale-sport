@@ -107,6 +107,19 @@ class Documento(Base):
     tesserato = relationship("Tesserato", back_populates="documenti")
 
 
+class DocumentoSocietario(Base):
+    """Documenti a livello di associazione (non legati a un singolo tesserato):
+    atto costitutivo, attribuzione codice fiscale, statuto, verbali, ecc."""
+    __tablename__ = "documenti_societari"
+    id = Column(Integer, primary_key=True, index=True)
+    nome = Column(String, nullable=False)
+    categoria = Column(String, nullable=True)
+    nome_file = Column(String, nullable=False)
+    url = Column(String, nullable=False)
+    data_caricamento = Column(Date, nullable=False)
+    note = Column(Text, nullable=True)
+
+
 class Gruppo(Base):
     __tablename__ = "gruppi"
     id = Column(Integer, primary_key=True, index=True)

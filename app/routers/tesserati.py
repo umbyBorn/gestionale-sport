@@ -358,3 +358,74 @@ def statistiche_tesserato(tesserato_id: int, db: Session = Depends(get_db)):
         "percentuale": percentuale,
         "streak": streak,
     }
+
+
+# ---- ESPORTAZIONE LIBRO SOCI ----
+
+@router.get("/export/libro-soci")
+def esporta_libro_soci(db: Session = Depends(get_db)):
+    """Esporta l'elenco tesserati nel formato del Libro Soci previsto dallo statuto
+    dell'associazione: N., Data ammissione, Quota associativa, Nome Cognome,
+    Luogo di nascita, Data di nascita, Indirizzo, Città, Provincia, Data dimissione."""
+    from fastapi.responses import StreamingResponse
+    from openpyxl import Workbook
+    from openpyxl.styles import Font, PatternFill, Alignment
+    from openpyxl.utils import get_column_letter
+    from app.models.contabilita import Pagamento, Tariffa
+    import io as _io
+
+    tesserati = db.query(Tesserato).order_by(Tesserato.cognome, Tesserato.nome).all()
+
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Libro Soci"
+
+    ws.merge_cells('A1:J1')
+    ws['A1'] = "ASD PGS JUVENILIA            C.F.   93162560879"
+    ws['A1'].font = Font(bold=True, size=12)
+    ws['A1'].alignment = Alignment(horizontal='center')
+
+    intestazioni = [
+        'N.', 'Data ammissione', 'Quota associativa', 'Nome Cognome', 'Luogo di nascita',
+        'Data di nascita', 'Indirizzo', 'Città', 'Provincia', 'Data dimissione'
+    ]
+    riga_header = 4
+    for col, testo in enumerate(intestazioni, start=1):
+        cell = ws.cell(row=riga_header, column=col, value=testo)
+        cell.font = Font(bold=True, color="FFFFFF")
+        cell.fill = PatternFill("solid", start_color="1E3A8A")
+        cell.alignment = Alignment(horizontal='center', wrap_text=True)
+
+    for i, t in enumerate(tesserati, start=1):
+        # Quota associativa: importo dell'ultima quota di categoria "Quote associative" registrata, se presente
+        quota = (
+            db.query(Pagamento.importo)
+            .join(Tariffa, Pagamento.tariffa_id == Tariffa.id)
+            .filter(Pagamento.tesserato_id == t.id, Tariffa.categoria == "Quote associative")
+            .order_by(Pagamento.data_scadenza.desc())
+            .first()
+        )
+        riga = riga_header + i
+        ws.cell(row=riga, column=1, value=i)
+        ws.cell(row=riga, column=2, value=t.data_emissione_tessera.strftime('%d/%m/%Y') if t.data_emissione_tessera else '')
+        ws.cell(row=riga, column=3, value=float(quota[0]) if quota else None)
+        ws.cell(row=riga, column=4, value=f"{t.nome} {t.cognome}")
+        ws.cell(row=riga, column=5, value=t.comune_nascita or '')
+        ws.cell(row=riga, column=6, value=t.data_nascita.strftime('%d/%m/%Y') if t.data_nascita else '')
+        ws.cell(row=riga, column=7, value=t.indirizzo or '')
+        ws.cell(row=riga, column=8, value=t.comune_residenza or '')
+        ws.cell(row=riga, column=9, value=t.provincia_residenza or '')
+        ws.cell(row=riga, column=10, value='' if t.attivo else 'Non più attivo (data non tracciata)')
+
+    for col in range(1, 11):
+        ws.column_dimensions[get_column_letter(col)].width = 18
+    ws.freeze_panes = f"A{riga_header + 1}"
+
+    buffer = _io.BytesIO()
+    wb.save(buffer)
+    buffer.seek(0)
+    return StreamingResponse(
+        buffer,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": "attachment; filename=libro_soci.xlsx"}
+    )

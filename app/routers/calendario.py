@@ -195,6 +195,7 @@ def elimina_evento_ricorrente(
     ricorrente.attivo = False
     eliminati = 0
     saltati_con_presenze = 0
+    totale_serie = db.query(Evento).filter(Evento.ricorrente_id == ricorrente_id).count()
     if elimina_futuri:
         oggi = date.today()
         eventi_futuri = db.query(Evento).filter(
@@ -215,6 +216,7 @@ def elimina_evento_ricorrente(
         "messaggio": "Evento ricorrente disattivato",
         "occorrenze_eliminate": eliminati,
         "saltate_con_presenze": saltati_con_presenze,
+        "totale_eventi_nella_serie_prima_dell_eliminazione": totale_serie,
     }
 
 @router.delete("/eventi/{evento_id}/occorrenza")

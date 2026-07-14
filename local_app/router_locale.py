@@ -55,10 +55,7 @@ def configura(dati: ConfiguraRichiesta):
         raise HTTPException(status_code=503, detail=f"Impossibile raggiungere il server online: {e}")
 
     if r.status_code != 200:
-        raise HTTPException(
-            status_code=401,
-            detail=f"Login rifiutato dal sistema online (codice {r.status_code}): {r.text[:300]}"
-        )
+        raise HTTPException(status_code=401, detail="Credenziali non valide sul sistema online")
 
     token = r.json()["access_token"]
     stato = _leggi_stato()

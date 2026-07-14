@@ -90,11 +90,9 @@ def _pulisci_dipendenze_tesserato(db: Session, tesserato_id: int):
     from app.models.contabilita import Pagamento
     from app.models.presenze import Presenza
     from app.models.messaggi import MessaggioDestinatario
-    db.query(Documento).filter(Documento.tesserato_id == tesserato_id).delete()
-    db.query(GruppoTesserato).filter(GruppoTesserato.tesserato_id == tesserato_id).delete()
-    db.query(Pagamento).filter(Pagamento.tesserato_id == tesserato_id).delete()
-    db.query(Presenza).filter(Presenza.tesserato_id == tesserato_id).delete()
-    db.query(MessaggioDestinatario).filter(MessaggioDestinatario.tesserato_id == tesserato_id).delete()
+    for modello in (Documento, GruppoTesserato, Pagamento, Presenza, MessaggioDestinatario):
+        for riga in db.query(modello).filter(modello.tesserato_id == tesserato_id).all():
+            db.delete(riga)  # cancellazione a livello ORM: registrata in sync_log
 
 @router.delete("/{tesserato_id}/definitivo")
 def elimina_tesserato_definitivo(tesserato_id: int, db: Session = Depends(get_db)):
@@ -144,7 +142,8 @@ def gruppi_del_tesserato(tesserato_id: int, db: Session = Depends(get_db)):
 
 @router.put("/{tesserato_id}/gruppi")
 def aggiorna_gruppi_tesserato(tesserato_id: int, gruppi_id: list[int], db: Session = Depends(get_db)):
-    db.query(GruppoTesserato).filter(GruppoTesserato.tesserato_id == tesserato_id).delete()
+    for riga in db.query(GruppoTesserato).filter(GruppoTesserato.tesserato_id == tesserato_id).all():
+        db.delete(riga)
     for gid in gruppi_id:
         db.add(GruppoTesserato(gruppo_id=gid, tesserato_id=tesserato_id, data_iscrizione=date.today()))
     db.commit()

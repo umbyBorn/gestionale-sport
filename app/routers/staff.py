@@ -74,7 +74,8 @@ def gruppi_staff(staff_id: int, db: Session = Depends(get_db)):
 
 @router.put("/staff/{staff_id}/gruppi")
 def aggiorna_gruppi_staff(staff_id: int, dati: GruppiStaffUpdate, db: Session = Depends(get_db)):
-    db.query(StaffGruppo).filter(StaffGruppo.staff_id == staff_id).delete()
+    for riga in db.query(StaffGruppo).filter(StaffGruppo.staff_id == staff_id).all():
+        db.delete(riga)
     for gid in dati.gruppo_ids:
         db.add(StaffGruppo(staff_id=staff_id, gruppo_id=gid))
     db.commit()

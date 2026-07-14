@@ -71,13 +71,15 @@ def pagamenti_tesserato(tesserato_id: int, db: Session = Depends(get_db)):
 
 @router.delete("/pagamenti/tesserato/{tesserato_id}/non-pagati")
 def elimina_pagamenti_non_pagati_tesserato(tesserato_id: int, db: Session = Depends(get_db)):
-    """Rimuove in blocco tutti i pagamenti non ancora pagati di un tesserato (es. creati per errore)."""
-    eliminati = db.query(Pagamento).filter(
+    """Rimuove tutti i pagamenti non ancora pagati di un tesserato (es. creati per errore)."""
+    righe = db.query(Pagamento).filter(
         Pagamento.tesserato_id == tesserato_id,
         Pagamento.pagato == False,
-    ).delete(synchronize_session=False)
+    ).all()
+    for riga in righe:
+        db.delete(riga)  # cancellazione a livello ORM: registrata in sync_log
     db.commit()
-    return {"eliminati": eliminati}
+    return {"eliminati": len(righe)}
 
 
 @router.post("/pagamenti/", response_model=PagamentoRead)
@@ -236,9 +238,11 @@ def elimina_batch(gruppo_generazione_id: str, solo_non_pagati: bool = True, db: 
     q = db.query(Pagamento).filter(Pagamento.gruppo_generazione_id == gruppo_generazione_id)
     if solo_non_pagati:
         q = q.filter(Pagamento.pagato == False)
-    eliminati = q.delete(synchronize_session=False)
+    righe = q.all()
+    for riga in righe:
+        db.delete(riga)  # cancellazione a livello ORM: registrata in sync_log
     db.commit()
-    return {"eliminati": eliminati}
+    return {"eliminati": len(righe)}
 
 
 # ---- TARIFFE ----

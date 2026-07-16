@@ -56,13 +56,15 @@ async def carica_documento_societario(
     _admin=Depends(richiedi_ruolo("amministratore")),
 ):
     contenuto = await file.read()
-    nome_file_pulito = os.path.splitext(file.filename)[0].replace(' ', '_')
+    nome_base, estensione = os.path.splitext(file.filename)
+    nome_base_pulito = nome_base.replace(' ', '_')
+    public_id_finale = f"{nome_base_pulito}{estensione}"  # mantiene l'estensione: fondamentale per raw
     risultato = cloudinary.uploader.upload(
         contenuto,
         folder="gestionale/documenti_societari",
         resource_type="raw",
-        public_id=nome_file_pulito,
-        use_filename=True,
+        public_id=public_id_finale,
+        use_filename=False,  # usiamo il public_id già pronto sopra
         unique_filename=True,
         overwrite=False,
         type="upload",
@@ -71,7 +73,7 @@ async def carica_documento_societario(
     doc = DocumentoSocietario(
         nome=nome,
         categoria=categoria,
-        nome_file=file.filename,
+        nome_file=file.filename,  # nome originale (con spazi) mostrato/usato in fase di download
         url=risultato["secure_url"],
         data_caricamento=datetime.now().date(),
         note=note,

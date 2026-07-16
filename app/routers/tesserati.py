@@ -209,13 +209,15 @@ async def carica_documento(
 ):
     contenuto = await file.read()
     import os as _os
-    nome_file_pulito = _os.path.splitext(file.filename)[0].replace(' ', '_')
+    nome_base, estensione = _os.path.splitext(file.filename)
+    nome_base_pulito = nome_base.replace(' ', '_')
+    public_id_finale = f"{nome_base_pulito}{estensione}"  # mantiene l'estensione: fondamentale per raw
     risultato = cloudinary.uploader.upload(
         contenuto,
         folder=f"gestionale/tesserati/{tesserato_id}/documenti",
         resource_type="raw",
-        public_id=nome_file_pulito,
-        use_filename=True,
+        public_id=public_id_finale,
+        use_filename=False,
         unique_filename=True,
         overwrite=False,
         type="upload",

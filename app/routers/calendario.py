@@ -174,10 +174,10 @@ def _elimina_evento_sicuro(db: Session, evento: Evento, forza_con_presenze: bool
     ha_presenze = db.query(Presenza).filter(Presenza.evento_id == evento.id).first() is not None
     if ha_presenze and not forza_con_presenze:
         return False
-    db.query(Presenza).filter(Presenza.evento_id == evento.id).delete(synchronize_session=False)
-    db.query(Pagamento).filter(Pagamento.evento_id == evento.id).update(
-        {Pagamento.evento_id: None}, synchronize_session=False
-    )
+    for p in db.query(Presenza).filter(Presenza.evento_id == evento.id).all():
+        db.delete(p)  # cancellazione a livello ORM: registrata in sync_log
+    for pag in db.query(Pagamento).filter(Pagamento.evento_id == evento.id).all():
+        pag.evento_id = None
     db.delete(evento)
     return True
 

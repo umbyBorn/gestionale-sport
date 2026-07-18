@@ -80,7 +80,7 @@ class Tesserato(Base):
     disabile = Column(Boolean, default=False)
     straniero = Column(Boolean, default=False)
     titolo_studio = Column(String, nullable=True)
-    e_socio = Column(Boolean, default=True)
+    e_socio = Column(Boolean, default=False)
     attivo = Column(Boolean, default=True)
 
     # Media

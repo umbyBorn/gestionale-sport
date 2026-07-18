@@ -35,6 +35,7 @@ class Pagamento(Base):
     descrizione = Column(String, nullable=True)
     evento_id = Column(Integer, ForeignKey("eventi.id"), nullable=True)
     gruppo_generazione_id = Column(String, nullable=True, index=True)
+    emetti_ricevuta = Column(Boolean, default=True)
     tesserato = relationship("Tesserato", back_populates="pagamenti")
     tariffa = relationship("Tariffa", back_populates="pagamenti")
     ricevuta = relationship("Ricevuta", back_populates="pagamento", uselist=False)

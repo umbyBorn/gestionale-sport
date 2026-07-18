@@ -33,6 +33,7 @@ class PagamentoRead(PagamentoCreate):
     id: int
     contabile_allegata: Optional[str] = None
     gruppo_generazione_id: Optional[str] = None
+    emetti_ricevuta: bool = True
 
     class Config:
         from_attributes = True

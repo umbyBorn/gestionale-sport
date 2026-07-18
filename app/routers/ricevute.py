@@ -350,6 +350,8 @@ def genera_ricevuta(pagamento_id: int, db: Session = Depends(get_db), utente=Dep
         raise HTTPException(status_code=404, detail="Pagamento non trovato")
     if not pagamento.pagato:
         raise HTTPException(status_code=400, detail="Il pagamento non è ancora stato registrato")
+    if not pagamento.emetti_ricevuta:
+        raise HTTPException(status_code=400, detail="Questo pagamento è stato registrato senza emissione di ricevuta")
 
     tesserato = db.query(Tesserato).filter(Tesserato.id == pagamento.tesserato_id).first()
     if not tesserato:

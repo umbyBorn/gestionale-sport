@@ -17,16 +17,24 @@ class StaffCreate(BaseModel):
     cognome: str
     data_nascita: date
     codice_fiscale: str
+    indirizzo: Optional[str] = None
+    comune_residenza: Optional[str] = None
     telefono: Optional[str] = None
     email: Optional[str] = None
     ruolo: str
     tipo_rapporto: TipoRapportoEnum
     data_inizio: date
     data_fine: Optional[date] = None
+    numero_tessera: Optional[int] = None
+    data_emissione_tessera: Optional[date] = None
+    quota_associativa: Optional[float] = 5
+    quota_pagata: Optional[bool] = False
+    tesserato_origine_id: Optional[int] = None
 
 class StaffRead(StaffCreate):
     id: int
     attivo: bool
+    path_modulo_firmato: Optional[str] = None
 
     class Config:
         from_attributes = True

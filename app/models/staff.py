@@ -20,6 +20,8 @@ class Staff(Base):
     cognome = Column(String, nullable=False)
     data_nascita = Column(Date, nullable=False)
     codice_fiscale = Column(String(16), unique=True, nullable=False)
+    indirizzo = Column(String, nullable=True)
+    comune_residenza = Column(String, nullable=True)
     telefono = Column(String, nullable=True)
     email = Column(String, nullable=True)
     ruolo = Column(String, nullable=False)
@@ -27,6 +29,14 @@ class Staff(Base):
     data_inizio = Column(Date, nullable=False)
     data_fine = Column(Date, nullable=True)
     attivo = Column(Boolean, default=True)
+
+    # Campi socio (tesseramento associativo)
+    numero_tessera = Column(Integer, unique=True, nullable=True)
+    data_emissione_tessera = Column(Date, nullable=True)
+    quota_associativa = Column(Numeric(10, 2), nullable=True, default=5)
+    quota_pagata = Column(Boolean, default=False)
+    path_modulo_firmato = Column(String, nullable=True)
+    tesserato_origine_id = Column(Integer, ForeignKey("tesserati.id"), nullable=True)  # solo per tracciare da chi è stato copiato, nessun collegamento vivo
 
     contratti = relationship("Contratto", back_populates="staff")
     compensi = relationship("Compenso", back_populates="staff")

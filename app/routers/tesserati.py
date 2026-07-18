@@ -90,9 +90,11 @@ def _pulisci_dipendenze_tesserato(db: Session, tesserato_id: int):
     from app.models.contabilita import Pagamento
     from app.models.presenze import Presenza
     from app.models.messaggi import MessaggioDestinatario
-    for modello in (Documento, GruppoTesserato, Pagamento, Presenza, MessaggioDestinatario):
-        for riga in db.query(modello).filter(modello.tesserato_id == tesserato_id).all():
-            db.delete(riga)  # cancellazione a livello ORM: registrata in sync_log
+    db.query(Documento).filter(Documento.tesserato_id == tesserato_id).delete()
+    db.query(GruppoTesserato).filter(GruppoTesserato.tesserato_id == tesserato_id).delete()
+    db.query(Pagamento).filter(Pagamento.tesserato_id == tesserato_id).delete()
+    db.query(Presenza).filter(Presenza.tesserato_id == tesserato_id).delete()
+    db.query(MessaggioDestinatario).filter(MessaggioDestinatario.tesserato_id == tesserato_id).delete()
 
 @router.delete("/{tesserato_id}/definitivo")
 def elimina_tesserato_definitivo(tesserato_id: int, db: Session = Depends(get_db)):
@@ -142,8 +144,7 @@ def gruppi_del_tesserato(tesserato_id: int, db: Session = Depends(get_db)):
 
 @router.put("/{tesserato_id}/gruppi")
 def aggiorna_gruppi_tesserato(tesserato_id: int, gruppi_id: list[int], db: Session = Depends(get_db)):
-    for riga in db.query(GruppoTesserato).filter(GruppoTesserato.tesserato_id == tesserato_id).all():
-        db.delete(riga)
+    db.query(GruppoTesserato).filter(GruppoTesserato.tesserato_id == tesserato_id).delete()
     for gid in gruppi_id:
         db.add(GruppoTesserato(gruppo_id=gid, tesserato_id=tesserato_id, data_iscrizione=date.today()))
     db.commit()
@@ -209,15 +210,13 @@ async def carica_documento(
 ):
     contenuto = await file.read()
     import os as _os
-    nome_base, estensione = _os.path.splitext(file.filename)
-    nome_base_pulito = nome_base.replace(' ', '_')
-    public_id_finale = f"{nome_base_pulito}{estensione}"  # mantiene l'estensione: fondamentale per raw
+    nome_file_pulito = _os.path.splitext(file.filename)[0].replace(' ', '_')
     risultato = cloudinary.uploader.upload(
         contenuto,
         folder=f"gestionale/tesserati/{tesserato_id}/documenti",
         resource_type="raw",
-        public_id=public_id_finale,
-        use_filename=False,
+        public_id=nome_file_pulito,
+        use_filename=True,
         unique_filename=True,
         overwrite=False,
         type="upload",

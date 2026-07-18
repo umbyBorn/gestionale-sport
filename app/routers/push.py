@@ -90,11 +90,9 @@ def test_send(subscription_id: int, db: Session = Depends(get_db)):
 
 @router.delete("/clear-all")
 def clear_all_subscriptions(db: Session = Depends(get_db)):
-    righe = db.query(PushSubscription).all()
-    for riga in righe:
-        db.delete(riga)
+    n = db.query(PushSubscription).delete()
     db.commit()
-    return {"eliminati": len(righe)}
+    return {"eliminati": n}
 
 @router.get("/subscriptions")
 def lista_subscriptions(db: Session = Depends(get_db)):

@@ -1,16 +1,11 @@
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from app.database import SessionLocal
 from app.models.assemblee import Assemblea, PuntoOrdineGiorno, PartecipazioneAssemblea
 from app.schemas.assemblee import AssembleaCreate, AssembleaRead, PuntoOrdineGiornoCreate, PuntoOrdineGiornoRead, PartecipazioneCreate, PartecipazioneRead
 from typing import List
-import os
-import cloudinary
-import cloudinary.uploader
 
 router = APIRouter(tags=["Assemblee"])
-
-cloudinary.config(cloudinary_url=os.getenv("CLOUDINARY_URL"))
 
 def get_db():
     db = SessionLocal()
@@ -108,43 +103,3 @@ def aggiorna_partecipazione(partecipazione_id: int, partecipazione: Partecipazio
     db.commit()
     db.refresh(db_part)
     return db_part
-
-
-# ---- VERBALE ----
-
-@router.post("/assemblee/{assemblea_id}/verbale", response_model=AssembleaRead)
-async def carica_verbale(assemblea_id: int, file: UploadFile = File(...), db: Session = Depends(get_db)):
-    db_assemblea = db.query(Assemblea).filter(Assemblea.id == assemblea_id).first()
-    if not db_assemblea:
-        raise HTTPException(status_code=404, detail="Assemblea non trovata")
-
-    contenuto = await file.read()
-    nome_base, estensione = os.path.splitext(file.filename)
-    nome_base_pulito = nome_base.replace(' ', '_')
-    public_id_finale = f"verbale_{assemblea_id}_{nome_base_pulito}{estensione}"
-    risultato = cloudinary.uploader.upload(
-        contenuto,
-        folder="gestionale/assemblee/verbali",
-        resource_type="raw",
-        public_id=public_id_finale,
-        use_filename=False,
-        unique_filename=True,
-        overwrite=True,
-        type="upload",
-        access_mode="public",
-    )
-    db_assemblea.path_verbale = risultato["secure_url"]
-    db.commit()
-    db.refresh(db_assemblea)
-    return db_assemblea
-
-
-@router.delete("/assemblee/{assemblea_id}/verbale", response_model=AssembleaRead)
-def elimina_verbale(assemblea_id: int, db: Session = Depends(get_db)):
-    db_assemblea = db.query(Assemblea).filter(Assemblea.id == assemblea_id).first()
-    if not db_assemblea:
-        raise HTTPException(status_code=404, detail="Assemblea non trovata")
-    db_assemblea.path_verbale = None
-    db.commit()
-    db.refresh(db_assemblea)
-    return db_assemblea

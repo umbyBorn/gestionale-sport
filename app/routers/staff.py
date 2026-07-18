@@ -315,7 +315,7 @@ def genera_modulo_adesione(staff_id: int, minorenne: bool = False, db: Session =
     elementi = [
         Paragraph('MODULO DI RICHIESTA ADESIONE ASSOCIAZIONE SPORTIVA<br/>"ASD P.G.S. JUVENILIA"', titolo),
         Spacer(1, 0.8*cm),
-        Paragraph('Al Consiglio Direttivo dell\'Associazione Sportiva "ASD P.G.S. JUVENILIA", Codice Fiscale 93162560179', normale),
+        Paragraph('Al Consiglio Direttivo dell\'Associazione Sportiva "ASD P.G.S. JUVENILIA", Codice Fiscale 93162560879', normale),
         Spacer(1, 0.5*cm),
         Paragraph(f'La/il sottoscritta/o <b>{socio.cognome} {socio.nome}</b>', normale),
         Paragraph(f'Nata/o a ____________________ il <b>{socio.data_nascita.strftime("%d/%m/%Y") if socio.data_nascita else "____________"}</b> Prov. ______', normale),

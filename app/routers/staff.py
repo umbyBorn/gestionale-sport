@@ -113,6 +113,8 @@ def elimina_staff(staff_id: int, db: Session = Depends(get_db)):
         db.delete(riga)
     for riga in db.query(StaffGruppo).filter(StaffGruppo.staff_id == staff_id).all():
         db.delete(riga)
+    for riga in db.query(DocumentoSocio).filter(DocumentoSocio.staff_id == staff_id).all():
+        db.delete(riga)
     db.delete(db_membro)
     db.commit()
     return {"messaggio": "Socio eliminato definitivamente"}

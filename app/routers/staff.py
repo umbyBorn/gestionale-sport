@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
 from sqlalchemy.orm import Session
 from app.database import SessionLocal
-from app.models.staff import Staff, Compenso, Contratto, StaffGruppo
+from app.models.staff import Staff, Compenso, Contratto, StaffGruppo, DocumentoSocio
 from app.models.utenti import Gruppo
 from app.schemas.staff import (
     StaffCreate, StaffRead, CompensoCreate, CompensoRead,
@@ -9,6 +9,7 @@ from app.schemas.staff import (
 )
 from typing import List
 from pydantic import BaseModel
+from datetime import datetime
 
 router = APIRouter(tags=["Staff"])
 
@@ -233,27 +234,67 @@ cloudinary.config(cloudinary_url=os.getenv("CLOUDINARY_URL"))
 
 @router.post("/staff/{staff_id}/modulo", response_model=StaffRead)
 async def carica_modulo_firmato(staff_id: int, file: UploadFile = File(...), db: Session = Depends(get_db)):
+    """Mantenuto per compatibilità: carica come 'Modulo di adesione firmato'
+    nella nuova lista documenti multipla."""
+    return await _carica_documento_socio(staff_id, "Modulo di adesione firmato", file, db)
+
+
+@router.post("/staff/{staff_id}/documenti", response_model=StaffRead)
+async def carica_documento_socio(staff_id: int, tipo: str, file: UploadFile = File(...), db: Session = Depends(get_db)):
+    return await _carica_documento_socio(staff_id, tipo, file, db)
+
+
+async def _carica_documento_socio(staff_id: int, tipo: str, file: UploadFile, db: Session):
     db_membro = db.query(Staff).filter(Staff.id == staff_id).first()
     if not db_membro:
         raise HTTPException(status_code=404, detail="Socio non trovato")
     contenuto = await file.read()
     nome_base, estensione = os.path.splitext(file.filename)
-    public_id_finale = f"modulo_socio_{staff_id}_{nome_base.replace(' ', '_')}{estensione}"
+    public_id_finale = f"modulo_socio_{staff_id}_{nome_base.replace(' ', '_')}_{int(datetime.now().timestamp())}{estensione}"
     risultato = cloudinary.uploader.upload(
         contenuto,
-        folder="gestionale/soci/moduli",
+        folder="gestionale/soci/documenti",
         resource_type="raw",
         public_id=public_id_finale,
         use_filename=False,
         unique_filename=True,
-        overwrite=True,
+        overwrite=False,
         type="upload",
         access_mode="public",
     )
+    doc = DocumentoSocio(
+        staff_id=staff_id, tipo=tipo, nome_file=file.filename,
+        url=risultato["secure_url"], data_caricamento=datetime.now().date(),
+    )
+    db.add(doc)
+    # mantengo aggiornato anche il vecchio campo per compatibilità con l'app locale
     db_membro.path_modulo_firmato = risultato["secure_url"]
     db.commit()
     db.refresh(db_membro)
     return db_membro
+
+
+@router.get("/staff/{staff_id}/documenti")
+def lista_documenti_socio(staff_id: int, db: Session = Depends(get_db)):
+    righe = db.query(DocumentoSocio).filter(DocumentoSocio.staff_id == staff_id).order_by(DocumentoSocio.data_caricamento.desc()).all()
+    return [
+        {
+            "id": d.id, "staff_id": d.staff_id, "tipo": d.tipo,
+            "nome_file": d.nome_file, "url": d.url,
+            "data_caricamento": d.data_caricamento, "note": d.note,
+        }
+        for d in righe
+    ]
+
+
+@router.delete("/staff/documenti/{documento_id}")
+def elimina_documento_socio(documento_id: int, db: Session = Depends(get_db)):
+    doc = db.query(DocumentoSocio).filter(DocumentoSocio.id == documento_id).first()
+    if not doc:
+        raise HTTPException(status_code=404, detail="Documento non trovato")
+    db.delete(doc)
+    db.commit()
+    return {"messaggio": "Documento eliminato"}
 
 
 @router.get("/staff/{staff_id}/tessera/pdf")
@@ -318,6 +359,9 @@ def genera_tessera(staff_id: int, db: Session = Depends(get_db)):
         buffer, media_type="application/pdf",
         headers={"Content-Disposition": f'attachment; filename="{nome_file}"'}
     )
+
+
+@router.get("/staff/{staff_id}/modulo-adesione/pdf")
 def genera_modulo_adesione(staff_id: int, minorenne: bool = False, db: Session = Depends(get_db)):
     """Genera il modulo di richiesta adesione all'associazione, precompilato
     con i dati anagrafici del socio, pronto da stampare/far firmare."""

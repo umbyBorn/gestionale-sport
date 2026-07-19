@@ -82,3 +82,17 @@ class Compenso(Base):
     soglia_superata = Column(Boolean, default=False)
 
     staff = relationship("Staff", back_populates="compensi")
+
+
+class DocumentoSocio(Base):
+    """Documenti/moduli caricati per un socio (es. modulo di adesione firmato,
+    documento d'identità, ecc.) - stessa logica dei documenti tesserato, ma
+    permette più caricamenti invece di un unico path_modulo_firmato."""
+    __tablename__ = "documenti_socio"
+    id = Column(Integer, primary_key=True, index=True)
+    staff_id = Column(Integer, ForeignKey("staff.id"), nullable=False)
+    tipo = Column(String, nullable=False)
+    nome_file = Column(String, nullable=False)
+    url = Column(String, nullable=False)
+    data_caricamento = Column(Date, nullable=False)
+    note = Column(String, nullable=True)

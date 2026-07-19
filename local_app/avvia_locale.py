@@ -103,7 +103,7 @@ def main():
         finestra = webview.create_window(
             "PGS Juvenilia - Gestionale (modalità locale)", url, width=1280, height=800
         )
-        webview.start()
+        webview.start(debug=True)
     except ImportError:
         # pywebview non installato: fallback, apro il browser predefinito
         webbrowser.open(url)

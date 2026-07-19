@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from app.database import SessionLocal
 from app.models.contabilita import Pagamento, Tariffa, MovimentoContabile
-from app.models.utenti import GruppoTesserato, Tesserato
+from app.models.utenti import GruppoTesserato
 from app.schemas.pagamenti import (
     PagamentoCreate, PagamentoRead, PagamentoUpdate,
     TariffaCreate, TariffaRead,
@@ -115,24 +115,20 @@ def elimina_pagamento(pagamento_id: int, db: Session = Depends(get_db)):
 
 
 @router.put("/pagamenti/{pagamento_id}/registra-incasso", response_model=PagamentoRead)
-def registra_incasso(pagamento_id: int, metodo: str, emetti_ricevuta: bool = True, db: Session = Depends(get_db)):
+def registra_incasso(pagamento_id: int, metodo: str, db: Session = Depends(get_db)):
     db_pagamento = db.query(Pagamento).filter(Pagamento.id == pagamento_id).first()
     if not db_pagamento:
         raise HTTPException(status_code=404, detail="Pagamento non trovato")
     db_pagamento.pagato = True
     db_pagamento.data_pagamento = date.today()
     db_pagamento.metodo = metodo
-    db_pagamento.emetti_ricevuta = emetti_ricevuta
     db.commit()
 
     # Genera automaticamente la riga di entrata in Prima Nota, se non già presente
     esiste = db.query(MovimentoContabile).filter(MovimentoContabile.pagamento_id == pagamento_id).first()
     if not esiste:
         tariffa = db.query(Tariffa).filter(Tariffa.id == db_pagamento.tariffa_id).first()
-        voce = db_pagamento.descrizione or (tariffa.nome if tariffa else "Incasso quota")
-        tesserato = db.query(Tesserato).filter(Tesserato.id == db_pagamento.tesserato_id).first()
-        nome_tesserato = f"{tesserato.cognome} {tesserato.nome}" if tesserato else ""
-        descrizione = f"{voce} - {nome_tesserato}" if nome_tesserato else voce
+        descrizione = db_pagamento.descrizione or (tariffa.nome if tariffa else "Incasso quota")
         movimento = MovimentoContabile(
             tipo="entrata",
             data=db_pagamento.data_pagamento,

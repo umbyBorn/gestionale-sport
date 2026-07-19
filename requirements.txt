@@ -34,5 +34,4 @@ pandas==2.2.3
 cloudinary==1.44.4
 pywebpush==2.3.0
 resend==2.32.2
-reportlab
-num2words==0.5.14
+reportlab==5.0.0

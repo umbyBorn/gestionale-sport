@@ -43,6 +43,21 @@ def tabulato_tessere(db: Session = Depends(get_db)):
         for s in soci
     ]
 
+@router.get("/staff/tessera/prossimo-numero-libero")
+def prossimo_numero_libero(db: Session = Depends(get_db)):
+    """Suggerisce il primo numero tessera libero, riutilizzando eventuali
+    numeri rimasti liberi dopo una cancellazione, invece di andare sempre
+    in avanti con max+1."""
+    assegnati = sorted(n for (n,) in db.query(Staff.numero_tessera).filter(Staff.numero_tessera.isnot(None)).all())
+    candidato = 1
+    for n in assegnati:
+        if n == candidato:
+            candidato += 1
+        elif n > candidato:
+            break
+    return {"numero_suggerito": candidato}
+
+
 @router.get("/staff/{staff_id}", response_model=StaffRead)
 def get_staff(staff_id: int, db: Session = Depends(get_db)):
     membro = db.query(Staff).filter(Staff.id == staff_id).first()
@@ -73,7 +88,13 @@ def crea_staff(membro: StaffCreate, db: Session = Depends(get_db)):
 def aggiorna_staff(staff_id: int, membro: StaffCreate, db: Session = Depends(get_db)):
     db_membro = db.query(Staff).filter(Staff.id == staff_id).first()
     if not db_membro:
-        raise HTTPException(status_code=404, detail="Membro staff non trovato")
+        raise HTTPException(status_code=404, detail="Socio non trovato")
+    if membro.numero_tessera:
+        esiste = db.query(Staff).filter(
+            Staff.numero_tessera == membro.numero_tessera, Staff.id != staff_id
+        ).first()
+        if esiste:
+            raise HTTPException(status_code=400, detail=f"Il numero tessera {membro.numero_tessera} è già assegnato a {esiste.cognome} {esiste.nome}")
     for key, value in membro.model_dump().items():
         setattr(db_membro, key, value)
     db.commit()
@@ -84,10 +105,16 @@ def aggiorna_staff(staff_id: int, membro: StaffCreate, db: Session = Depends(get
 def elimina_staff(staff_id: int, db: Session = Depends(get_db)):
     db_membro = db.query(Staff).filter(Staff.id == staff_id).first()
     if not db_membro:
-        raise HTTPException(status_code=404, detail="Membro staff non trovato")
-    db_membro.attivo = False
+        raise HTTPException(status_code=404, detail="Socio non trovato")
+    for riga in db.query(Compenso).filter(Compenso.staff_id == staff_id).all():
+        db.delete(riga)
+    for riga in db.query(Contratto).filter(Contratto.staff_id == staff_id).all():
+        db.delete(riga)
+    for riga in db.query(StaffGruppo).filter(StaffGruppo.staff_id == staff_id).all():
+        db.delete(riga)
+    db.delete(db_membro)
     db.commit()
-    return {"messaggio": "Membro staff disattivato"}
+    return {"messaggio": "Socio eliminato definitivamente"}
 
 
 # ---- GRUPPI ASSEGNATI ALLO STAFF ----

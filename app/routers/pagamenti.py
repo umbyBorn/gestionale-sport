@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from app.database import SessionLocal
 from app.models.contabilita import Pagamento, Tariffa, MovimentoContabile
-from app.models.utenti import GruppoTesserato
+from app.models.utenti import GruppoTesserato, Tesserato
 from app.schemas.pagamenti import (
     PagamentoCreate, PagamentoRead, PagamentoUpdate,
     TariffaCreate, TariffaRead,
@@ -109,26 +109,32 @@ def elimina_pagamento(pagamento_id: int, db: Session = Depends(get_db)):
     db_pagamento = db.query(Pagamento).filter(Pagamento.id == pagamento_id).first()
     if not db_pagamento:
         raise HTTPException(status_code=404, detail="Pagamento non trovato")
+    for movimento in db.query(MovimentoContabile).filter(MovimentoContabile.pagamento_id == pagamento_id).all():
+        db.delete(movimento)  # cancellazione a livello ORM: registrata in sync_log
     db.delete(db_pagamento)
     db.commit()
     return {"messaggio": "Pagamento eliminato"}
 
 
 @router.put("/pagamenti/{pagamento_id}/registra-incasso", response_model=PagamentoRead)
-def registra_incasso(pagamento_id: int, metodo: str, db: Session = Depends(get_db)):
+def registra_incasso(pagamento_id: int, metodo: str, emetti_ricevuta: bool = True, db: Session = Depends(get_db)):
     db_pagamento = db.query(Pagamento).filter(Pagamento.id == pagamento_id).first()
     if not db_pagamento:
         raise HTTPException(status_code=404, detail="Pagamento non trovato")
     db_pagamento.pagato = True
     db_pagamento.data_pagamento = date.today()
     db_pagamento.metodo = metodo
+    db_pagamento.emetti_ricevuta = emetti_ricevuta
     db.commit()
 
     # Genera automaticamente la riga di entrata in Prima Nota, se non già presente
     esiste = db.query(MovimentoContabile).filter(MovimentoContabile.pagamento_id == pagamento_id).first()
     if not esiste:
         tariffa = db.query(Tariffa).filter(Tariffa.id == db_pagamento.tariffa_id).first()
-        descrizione = db_pagamento.descrizione or (tariffa.nome if tariffa else "Incasso quota")
+        voce = db_pagamento.descrizione or (tariffa.nome if tariffa else "Incasso quota")
+        tesserato = db.query(Tesserato).filter(Tesserato.id == db_pagamento.tesserato_id).first()
+        nome_tesserato = f"{tesserato.cognome} {tesserato.nome}" if tesserato else ""
+        descrizione = f"{voce} - {nome_tesserato}" if nome_tesserato else voce
         movimento = MovimentoContabile(
             tipo="entrata",
             data=db_pagamento.data_pagamento,
@@ -248,8 +254,22 @@ def elimina_batch(gruppo_generazione_id: str, solo_non_pagati: bool = True, db: 
 # ---- TARIFFE ----
 
 @router.get("/tariffe/", response_model=List[TariffaRead])
-def lista_tariffe(db: Session = Depends(get_db)):
-    return db.query(Tariffa).filter(Tariffa.attiva == True).all()
+def lista_tariffe(includi_nascoste: bool = False, db: Session = Depends(get_db)):
+    q = db.query(Tariffa)
+    if not includi_nascoste:
+        q = q.filter(Tariffa.attiva == True)
+    return q.all()
+
+
+@router.put("/tariffe/{tariffa_id}/riattiva", response_model=TariffaRead)
+def riattiva_tariffa(tariffa_id: int, db: Session = Depends(get_db)):
+    db_tariffa = db.query(Tariffa).filter(Tariffa.id == tariffa_id).first()
+    if not db_tariffa:
+        raise HTTPException(status_code=404, detail="Tariffa non trovata")
+    db_tariffa.attiva = True
+    db.commit()
+    db.refresh(db_tariffa)
+    return db_tariffa
 
 
 @router.post("/tariffe/", response_model=TariffaRead)

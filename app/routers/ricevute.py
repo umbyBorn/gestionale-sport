@@ -363,8 +363,13 @@ def genera_ricevuta(pagamento_id: int, db: Session = Depends(get_db), utente=Dep
     metodo = pagamento.metodo.value if pagamento.metodo else "contanti"
     nome_intest, doc_intest, mese = _dati_intestazione(db, tesserato, causale, str(pagamento.data_scadenza))
 
+    if not pagamento.numero_ricevuta:
+        massimo = db.query(Pagamento.numero_ricevuta).filter(Pagamento.numero_ricevuta.isnot(None)).order_by(Pagamento.numero_ricevuta.desc()).first()
+        pagamento.numero_ricevuta = (massimo[0] + 1) if massimo and massimo[0] else 1
+        db.commit()
+
     pdf = genera_pdf_ricevuta(
-        numero=pagamento_id,
+        numero=pagamento.numero_ricevuta,
         tesserato=tesserato,
         importo=pagamento.importo,
         causale=causale,
@@ -390,6 +395,8 @@ def invia_ricevuta_email(pagamento_id: int, db: Session = Depends(get_db), utent
         raise HTTPException(status_code=404, detail="Pagamento non trovato")
     if not pagamento.pagato:
         raise HTTPException(status_code=400, detail="Il pagamento non è stato registrato")
+    if not pagamento.emetti_ricevuta:
+        raise HTTPException(status_code=400, detail="Questo pagamento è stato registrato senza emissione di ricevuta")
 
     tesserato = db.query(Tesserato).filter(Tesserato.id == pagamento.tesserato_id).first()
     tariffa = db.query(Tariffa).filter(Tariffa.id == pagamento.tariffa_id).first()
@@ -397,6 +404,11 @@ def invia_ricevuta_email(pagamento_id: int, db: Session = Depends(get_db), utent
     data_pag = pagamento.data_pagamento or datetime.now().strftime("%Y-%m-%d")
     metodo = pagamento.metodo.value if pagamento.metodo else "contanti"
     nome_intest, doc_intest, mese = _dati_intestazione(db, tesserato, causale, str(pagamento.data_scadenza))
+
+    if not pagamento.numero_ricevuta:
+        massimo = db.query(Pagamento.numero_ricevuta).filter(Pagamento.numero_ricevuta.isnot(None)).order_by(Pagamento.numero_ricevuta.desc()).first()
+        pagamento.numero_ricevuta = (massimo[0] + 1) if massimo and massimo[0] else 1
+        db.commit()
 
     email_dest = tesserato.email
     if not email_dest and tesserato.utente_id:
@@ -414,7 +426,7 @@ def invia_ricevuta_email(pagamento_id: int, db: Session = Depends(get_db), utent
         raise HTTPException(status_code=400, detail="Il tesserato non ha un indirizzo email")
 
     pdf = genera_pdf_ricevuta(
-        numero=pagamento_id,
+        numero=pagamento.numero_ricevuta,
         tesserato=tesserato,
         importo=pagamento.importo,
         causale=causale,
@@ -454,6 +466,28 @@ def crea_ricevuta_donazione(dati: RicevutaDonazioneCreate, db: Session = Depends
     db.commit()
     db.refresh(db_ricevuta)
     return db_ricevuta
+
+
+@router.put("/erogazione-liberale/{ricevuta_id}", response_model=RicevutaDonazioneRead)
+def modifica_ricevuta_donazione(ricevuta_id: int, dati: RicevutaDonazioneCreate, db: Session = Depends(get_db), utente=Depends(get_utente_corrente)):
+    db_ricevuta = db.query(RicevutaDonazione).filter(RicevutaDonazione.id == ricevuta_id).first()
+    if not db_ricevuta:
+        raise HTTPException(status_code=404, detail="Ricevuta non trovata")
+    for campo, valore in dati.model_dump().items():
+        setattr(db_ricevuta, campo, valore)
+    db.commit()
+    db.refresh(db_ricevuta)
+    return db_ricevuta
+
+
+@router.delete("/erogazione-liberale/{ricevuta_id}")
+def elimina_ricevuta_donazione(ricevuta_id: int, db: Session = Depends(get_db), utente=Depends(get_utente_corrente)):
+    db_ricevuta = db.query(RicevutaDonazione).filter(RicevutaDonazione.id == ricevuta_id).first()
+    if not db_ricevuta:
+        raise HTTPException(status_code=404, detail="Ricevuta non trovata")
+    db.delete(db_ricevuta)
+    db.commit()
+    return {"messaggio": "Ricevuta eliminata"}
 
 
 @router.get("/erogazione-liberale/{ricevuta_id}/pdf")

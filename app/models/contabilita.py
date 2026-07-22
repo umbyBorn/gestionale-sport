@@ -25,7 +25,7 @@ class Pagamento(Base):
     __tablename__ = "pagamenti"
     id = Column(Integer, primary_key=True, index=True)
     tesserato_id = Column(Integer, ForeignKey("tesserati.id"), nullable=False)
-    tariffa_id = Column(Integer, ForeignKey("tariffe.id"), nullable=False)
+    tariffa_id = Column(Integer, ForeignKey("tariffe.id"), nullable=True)
     importo = Column(Numeric(10, 2), nullable=False)
     data_scadenza = Column(Date, nullable=False)
     data_pagamento = Column(Date, nullable=True)
@@ -36,6 +36,7 @@ class Pagamento(Base):
     evento_id = Column(Integer, ForeignKey("eventi.id"), nullable=True)
     gruppo_generazione_id = Column(String, nullable=True, index=True)
     emetti_ricevuta = Column(Boolean, default=True)
+    numero_ricevuta = Column(Integer, unique=True, nullable=True)
     tesserato = relationship("Tesserato", back_populates="pagamenti")
     tariffa = relationship("Tariffa", back_populates="pagamenti")
     ricevuta = relationship("Ricevuta", back_populates="pagamento", uselist=False)

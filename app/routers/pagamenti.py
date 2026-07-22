@@ -293,6 +293,25 @@ def modifica_tariffa(tariffa_id: int, tariffa: TariffaCreate, db: Session = Depe
     return db_tariffa
 
 
+@router.delete("/tariffe/{tariffa_id}/definitivo")
+def elimina_tariffa_definitivo(tariffa_id: int, db: Session = Depends(get_db)):
+    """Elimina fisicamente la tariffa. I pagamenti già generati con questa
+    tariffa NON vengono toccati: restano con la loro descrizione originale
+    (viene copiato il nome della tariffa nella descrizione se non già presente),
+    solo il collegamento alla tariffa viene rimosso."""
+    db_tariffa = db.query(Tariffa).filter(Tariffa.id == tariffa_id).first()
+    if not db_tariffa:
+        raise HTTPException(status_code=404, detail="Tariffa non trovata")
+    pagamenti_collegati = db.query(Pagamento).filter(Pagamento.tariffa_id == tariffa_id).all()
+    for pag in pagamenti_collegati:
+        if not pag.descrizione:
+            pag.descrizione = db_tariffa.nome
+        pag.tariffa_id = None
+    db.delete(db_tariffa)
+    db.commit()
+    return {"messaggio": f"Tariffa eliminata definitivamente. {len(pagamenti_collegati)} pagamenti collegati mantenuti."}
+
+
 @router.delete("/tariffe/{tariffa_id}")
 def elimina_tariffa(tariffa_id: int, db: Session = Depends(get_db)):
     """Disattiva la tariffa (non la cancella fisicamente): i pagamenti già

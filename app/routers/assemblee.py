@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
 from sqlalchemy.orm import Session
 from app.database import SessionLocal
 from app.models.assemblee import Assemblea, PuntoOrdineGiorno, PartecipazioneAssemblea
+from app.models.utenti import Tesserato
 from app.schemas.assemblee import AssembleaCreate, AssembleaRead, PuntoOrdineGiornoCreate, PuntoOrdineGiornoRead, PartecipazioneCreate, PartecipazioneRead
 from typing import List
 import os
@@ -148,3 +149,106 @@ def elimina_verbale(assemblea_id: int, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(db_assemblea)
     return db_assemblea
+
+
+@router.get("/assemblee/{assemblea_id}/verbale/genera-docx")
+def genera_verbale_docx(assemblea_id: int, db: Session = Depends(get_db)):
+    """Genera una bozza di verbale in formato Word (.docx), precompilata con
+    i dati dell'assemblea, i punti all'ordine del giorno e i partecipanti,
+    pronta per essere completata e modificata liberamente prima di essere
+    eventualmente caricata firmata."""
+    from fastapi.responses import StreamingResponse
+    from docx import Document
+    from docx.shared import Pt, Cm
+    from docx.enum.text import WD_ALIGN_PARAGRAPH
+    import io
+
+    assemblea = db.query(Assemblea).filter(Assemblea.id == assemblea_id).first()
+    if not assemblea:
+        raise HTTPException(status_code=404, detail="Assemblea non trovata")
+    punti = db.query(PuntoOrdineGiorno).filter(PuntoOrdineGiorno.assemblea_id == assemblea_id).order_by(PuntoOrdineGiorno.numero.asc()).all()
+    partecipazioni = db.query(PartecipazioneAssemblea).filter(PartecipazioneAssemblea.assemblea_id == assemblea_id).all()
+
+    doc = Document()
+    for sezione in doc.sections:
+        sezione.top_margin = Cm(2)
+        sezione.bottom_margin = Cm(2)
+
+    titolo = doc.add_paragraph()
+    titolo.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    run = titolo.add_run("VERBALE DI ASSEMBLEA\nASD PGS JUVENILIA")
+    run.bold = True
+    run.font.size = Pt(15)
+
+    doc.add_paragraph()
+    p = doc.add_paragraph()
+    p.add_run(f"Assemblea: ").bold = True
+    p.add_run(assemblea.titolo)
+    p = doc.add_paragraph()
+    p.add_run("Data: ").bold = True
+    p.add_run(assemblea.data.strftime("%d/%m/%Y") if assemblea.data else "____________")
+    if assemblea.ora:
+        p.add_run("   Ora: ").bold = True
+        p.add_run(str(assemblea.ora))
+    p = doc.add_paragraph()
+    p.add_run("Luogo: ").bold = True
+    p.add_run(assemblea.luogo or "____________________________")
+
+    doc.add_paragraph()
+    doc.add_heading("Partecipanti", level=2)
+    if partecipazioni:
+        tabella = doc.add_table(rows=1, cols=3)
+        tabella.style = "Light Grid Accent 1"
+        hdr = tabella.rows[0].cells
+        hdr[0].text = "Cognome e Nome"
+        hdr[1].text = "Presente"
+        hdr[2].text = "Delega"
+        for part in partecipazioni:
+            tess = db.query(Tesserato).filter(Tesserato.id == part.tesserato_id).first()
+            delegato = db.query(Tesserato).filter(Tesserato.id == part.delega_a_id).first() if part.delega_a_id else None
+            riga = tabella.add_row().cells
+            riga[0].text = f"{tess.cognome} {tess.nome}" if tess else "-"
+            riga[1].text = "Sì" if part.presente else "No"
+            riga[2].text = f"{delegato.cognome} {delegato.nome}" if delegato else "-"
+    else:
+        doc.add_paragraph("Nessun partecipante ancora registrato nel sistema per questa assemblea.")
+
+    doc.add_paragraph()
+    doc.add_heading("Ordine del giorno", level=2)
+    if punti:
+        for pt in punti:
+            doc.add_paragraph(f"{pt.numero}. {pt.titolo}", style="List Number")
+            if pt.descrizione:
+                doc.add_paragraph(pt.descrizione)
+            doc.add_paragraph("Discussione ed esito:").italic = True
+            doc.add_paragraph(pt.esito or "________________________________________________")
+            doc.add_paragraph()
+    else:
+        doc.add_paragraph("1. ________________________________________________")
+        doc.add_paragraph("Discussione ed esito:")
+        doc.add_paragraph("________________________________________________")
+
+    doc.add_paragraph()
+    doc.add_heading("Delibere", level=2)
+    doc.add_paragraph("________________________________________________")
+    doc.add_paragraph("________________________________________________")
+
+    doc.add_paragraph()
+    doc.add_paragraph()
+    firme = doc.add_paragraph()
+    firme.add_run("Il Presidente").bold = True
+    firme.add_run("\t\t\t\t")
+    firme.add_run("Il Segretario").bold = True
+    doc.add_paragraph("_____________________")
+    doc.add_paragraph()
+    doc.add_paragraph("_____________________\t\t\t_____________________")
+
+    buffer = io.BytesIO()
+    doc.save(buffer)
+    buffer.seek(0)
+    nome_file = f"verbale_bozza_{assemblea.titolo.replace(' ', '_')}.docx"
+    return StreamingResponse(
+        buffer,
+        media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        headers={"Content-Disposition": f'attachment; filename="{nome_file}"'}
+    )
